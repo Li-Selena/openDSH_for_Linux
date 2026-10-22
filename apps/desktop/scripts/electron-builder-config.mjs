@@ -275,7 +275,14 @@ export function createElectronBuilderConfig(
       category: 'Development',
       target: ['AppImage'],
     },
-    ...(packagesLinux ? { rpm: { packageName: 'deepseek-harness' } } : {}),
+    ...(packagesLinux ? { rpm: {
+      packageName: 'deepseek-harness',
+      artifactName: 'deepseek-harness-${version}-${os}-${arch}-r2-unsigned.${ext}',
+      afterRemove: fileURLToPath(new URL('../packaging/linux/rpm-after-remove.tpl', import.meta.url)),
+      // Bound compression memory independently of the build host's CPU count.
+      fpm: ['--rpm-compression', 'xz', '--rpm-compression-level', '6', '--iteration', '2', '--rpm-posttrans',
+        fileURLToPath(new URL('../packaging/linux/rpm-posttrans.sh', import.meta.url))],
+    } } : {}),
     nsis: {
       installerSidebar: join(buildPaths.root, 'installer-ui', 'uninstaller-sidebar.bmp'),
       uninstallerSidebar: join(buildPaths.root, 'installer-ui', 'uninstaller-sidebar.bmp'),

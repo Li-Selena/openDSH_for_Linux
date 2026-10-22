@@ -66,6 +66,9 @@ export interface DesktopElectronBuilderConfig {
   }
   readonly rpm?: {
     readonly packageName: 'deepseek-harness'
+    readonly artifactName: string
+    readonly afterRemove: string
+    readonly fpm: readonly string[]
   }
   readonly beforeBuild: () => Promise<boolean>
   readonly beforePack: (context: BeforePackContext) => Promise<void>

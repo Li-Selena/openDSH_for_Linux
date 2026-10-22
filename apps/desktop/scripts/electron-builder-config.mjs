@@ -29,6 +29,7 @@ import { preserveWindowsRuntimeSignature, signWindowsCode } from './windows-runt
 import { prepareWindowsAsarUnpack, verifyWindowsAsarUnpack } from './windows-asar-unpack.mjs'
 import { recordPackagingEvent } from './packaging-run.mjs'
 import { verifyLinuxSystemRuntime } from './linux-runtime.mjs'
+import { normalizeLinuxPackagePermissions } from './linux-package-permissions.mjs'
 import {
   resolveMacOSAppUpdateFeed,
   verifyMacOSAppUpdateConfig,
@@ -214,6 +215,7 @@ export function createElectronBuilderConfig(
       const { verifyDesktopRuntime } = await import('../lib/types/runtime-tree.js')
       const resourcesDir = context.packager.getResourcesDir(context.appOutDir)
       if (packagesLinux) {
+        normalizeLinuxPackagePermissions(context.appOutDir)
         const packagedRuntime = join(resourcesDir, 'dsh')
         await verifyDesktopRuntime(packagedRuntime,
           preparedRuntimeVersion ?? productVersion, { platform: resolvedPlatform, arch: resolvedArch })
@@ -280,7 +282,10 @@ export function createElectronBuilderConfig(
       artifactName: 'deepseek-harness-${version}-${os}-${arch}-r2-unsigned.${ext}',
       afterRemove: fileURLToPath(new URL('../packaging/linux/rpm-after-remove.tpl', import.meta.url)),
       // Bound compression memory independently of the build host's CPU count.
-      fpm: ['--rpm-compression', 'xz', '--rpm-compression-level', '6', '--iteration', '2', '--rpm-posttrans',
+      fpm: ['--rpm-compression', 'xz', '--rpm-compression-level', '6',
+        // FPM indexes RPM-escaped paths, replacing spaces with question marks.
+        '--rpm-attr', '0644,root,root:/opt/DeepSeek?Harness/resources/apparmor-profile',
+        '--iteration', '2', '--rpm-posttrans',
         fileURLToPath(new URL('../packaging/linux/rpm-posttrans.sh', import.meta.url))],
     } } : {}),
     nsis: {

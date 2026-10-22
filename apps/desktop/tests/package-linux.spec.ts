@@ -46,7 +46,8 @@ describe('local Linux packaging', () => {
     expect(config.rpm?.packageName).toBe('deepseek-harness')
     expect(config.rpm?.afterRemove).toMatch(/rpm-after-remove\.tpl$/u)
     expect(config.rpm?.fpm).toEqual([
-      '--rpm-compression', 'xz', '--rpm-compression-level', '6', '--iteration', '2',
+      '--rpm-compression', 'xz', '--rpm-compression-level', '6',
+      '--rpm-attr', '0644,root,root:/opt/DeepSeek?Harness/resources/apparmor-profile', '--iteration', '2',
       '--rpm-posttrans', expect.stringMatching(/rpm-posttrans\.sh$/u),
     ])
     expect(config.rpm?.artifactName).toContain('-r2-unsigned.')

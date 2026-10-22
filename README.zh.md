@@ -6,13 +6,24 @@
 
 ## 当前状态
 
-当前仓库提供源码，尚未提供可直接下载的社区安装包。下方主流程是在本机编译并运行未签名的目录版；仅克隆仓库并不等于安装了桌面应用。
+未签名 RPM 和 AppImage 安装包见[社区预发布页](https://github.com/Li-Selena/openDSH_for_Linux/releases/tag/v0.2.1-rc.2-fedora.1)。安装包内置 Node、pnpm 和 Python，运行它们不需要源码构建工具。下方仍保留源码构建步骤。
 
-目标环境是 Fedora 44、x86_64、KDE Wayland。历史本地检查覆盖 GUI/Host 启动、文件与 Shell、会话恢复、插件、模拟 API Key 持久化和 Office 样例。全新机器完整安装、真实 DeepSeek 推理、完整官方功能对齐、RPM 系统安装生命周期及 AppImage 原始 FUSE/AppRun 启动尚未完成验收。
+目标环境是 Fedora 44、x86_64、KDE Wayland。干净源码构建通过全部 9 项构建检查和打包运行时检查，包括 Host、原生模块、终端/搜索、插件安装/移除及 Office 转换。AppImage 解包运行启动和 RPM 解包程序已使用全新配置验证。RPM 系统安装/升级/卸载、AppImage FUSE 启动、全新机器安装、真实 DeepSeek 推理及完整官方功能对齐尚未完成验收。
+
+## 安装预发布包
+
+从预发布页下载所需格式及 `SHA256SUMS`。RPM 会集成到 Fedora 系统；AppImage 可从下载目录运行。两者都需要图形桌面、系统 GUI 库，以及用于模型请求的个人 API Key。详细安装、更新/卸载步骤、验证范围、许可证和第三方源码材料随预发布提供。
+
+```bash
+sha256sum --ignore-missing -c SHA256SUMS
+sudo dnf install ./deepseek-harness-0.2.1-rc.2-linux-x86_64-unsigned.rpm
+chmod +x deepseek-harness-0.2.1-rc.2-linux-x86_64-unsigned.AppImage
+./deepseek-harness-0.2.1-rc.2-linux-x86_64-unsigned.AppImage --appimage-extract-and-run
+```
 
 ## 所需环境
 
-以下要求依据源码清单和已有 Fedora 构建记录整理。下方系统包命令用于 Fedora 环境准备，不代表已经在最小化全新系统上完成验收。
+从源码构建需要以下环境。下方系统包命令用于 Fedora 环境准备，不代表已经在最小化全新系统上完成验收。
 
 | 项目 | 要求 |
 | --- | --- |
@@ -147,7 +158,7 @@ sudo dnf install rpm-build libxcrypt-compat
 pnpm --dir apps/desktop run package:linux --format rpm --skip-build
 ```
 
-产物写入 `apps/desktop/.desktop-build/targets/linux-x64/unsigned-artifacts/`，文件名保留 `unsigned`。生成这些文件不等于安装了它们。RPM 系统安装/升级/卸载和 AppImage 原始启动仍需独立验收；本次预览优先使用上方目录版流程。
+产物写入 `apps/desktop/.desktop-build/targets/linux-x64/unsigned-artifacts/`，文件名保留 `unsigned`。生成这些文件不等于安装了它们。RPM 系统安装/升级/卸载和 AppImage FUSE 启动仍需独立验收；预发布说明记录了已测试的启动路径。
 
 ## 更新、移除与常见问题
 
@@ -169,4 +180,4 @@ pnpm --dir apps/desktop run package:linux --format rpm --skip-build
 
 上游源码由 DeepSeek 开发，Fedora 适配由 [Li-Selena](https://github.com/Li-Selena)维护。保留原版权及 [MIT 许可证](LICENSE)，第三方组件适用各自条款。详见[第三方声明](THIRD_PARTY_NOTICES.md)和[品牌规范](BRAND_GUIDELINES.zh.md)。
 
-最初导入来自本地归档，精确官方上游提交尚未核验；源码记录中的本地编号不是官方发布编号。安装包发布前仍需完成二进制依赖和素材再分发核对。
+最初导入来自本地归档，精确官方上游提交尚未核验；源码记录中的本地编号不是官方发布编号。预发布附件保留实际打包依赖清单、许可和源码获取说明；第三方许可证独立于本仓库的 MIT 许可适用。

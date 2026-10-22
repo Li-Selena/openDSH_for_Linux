@@ -6,11 +6,14 @@
   en: 93094364a6e10283
   zh: 78c046573ceb6f0a
 /opendsh-for-linux/status:
-  en: e8f987e2b59dd192
-  zh: 4ea7ea83393275e2
+  en: 32a82947c61eec97
+  zh: 55768c5ecaaae744
+/opendsh-for-linux/install-a-preview-package:
+  en: 520e6e86502131e9
+  zh: 62e831cb631df154
 /opendsh-for-linux/requirements:
-  en: f2735c5a85215e64
-  zh: 049e028b0afe3489
+  en: a0eb28ab19ee97fa
+  zh: 6f604e2d4d2cf574
 /opendsh-for-linux/build-and-run-from-source:
   en: 81582cd277e66b55
   zh: 1b97e5aeeb885e5f
@@ -30,11 +33,11 @@
   en: b67005d7eb96e9e7
   zh: fbb1d1ca9d1c25e5
 /opendsh-for-linux/optional-appimage-and-rpm-output:
-  en: 1809b8af49d2afe6
-  zh: 7a7e51304dbe61fa
+  en: dfef13a285f3e53a
+  zh: 9bb28bd3cd14c553
 /opendsh-for-linux/updates-removal-and-troubleshooting:
   en: d4a6a67276df3481
   zh: e318117307b9e1c3
 /opendsh-for-linux/source-contributing-and-license:
-  en: e970114be940e2d1
-  zh: f9a0a64b590166a5
+  en: 85b553f9b39ad8ac
+  zh: 8ae12062b6f313ef

@@ -6,13 +6,24 @@ Community Fedora desktop adaptation of [DeepSeek Harness](https://github.com/dee
 
 ## Status
 
-This repository currently distributes source. There is no downloadable community installer yet. The primary setup below builds and runs an unsigned application directory; cloning the repository alone does not install the desktop app.
+Unsigned RPM and AppImage packages are available in the [community preview release](https://github.com/Li-Selena/openDSH_for_Linux/releases/tag/v0.2.1-rc.2-fedora.1). Installers include Node, pnpm and Python; source build tools are unnecessary for running them. Source-build instructions remain below.
 
-The target is Fedora 44, x86_64, KDE Wayland. Historical local checks cover GUI/Host startup, files and shell commands, session recovery, plugins, mock API Key persistence, and Office samples. A fresh-machine end-to-end installation, real DeepSeek inference, complete upstream feature parity, RPM system lifecycle, and original AppImage FUSE/AppRun startup remain unvalidated.
+The target is Fedora 44, x86_64, KDE Wayland. The clean-source build passed all 9 build gates and packaged-runtime checks, including Host, native modules, terminal/search, plugin installation/removal and Office conversions. AppImage extraction-mode startup and the extracted RPM application were checked with fresh profiles. RPM system installation/upgrade/removal, AppImage FUSE startup, fresh-machine installation, real DeepSeek inference and complete upstream feature parity remain unvalidated.
+
+## Install a preview package
+
+Download your preferred package and `SHA256SUMS` from the release page. The RPM requires Fedora system integration; AppImage can run from your download directory. Both need a graphical desktop, system GUI libraries and your own API Key for model requests. Detailed installation, update/removal instructions, verification scope, licenses and third-party source materials accompany the release.
+
+```bash
+sha256sum --ignore-missing -c SHA256SUMS
+sudo dnf install ./deepseek-harness-0.2.1-rc.2-linux-x86_64-unsigned.rpm
+chmod +x deepseek-harness-0.2.1-rc.2-linux-x86_64-unsigned.AppImage
+./deepseek-harness-0.2.1-rc.2-linux-x86_64-unsigned.AppImage --appimage-extract-and-run
+```
 
 ## Requirements
 
-The source manifest and existing Fedora build records establish the following requirements. The system package commands below are Fedora setup guidance, not a claim that a minimal fresh system has been qualified.
+Building from source needs the following environment. The system package commands below are Fedora setup guidance, not a claim that a minimal fresh system has been qualified.
 
 | Item | Requirement |
 | --- | --- |
@@ -147,7 +158,7 @@ sudo dnf install rpm-build libxcrypt-compat
 pnpm --dir apps/desktop run package:linux --format rpm --skip-build
 ```
 
-Artifacts are written under `apps/desktop/.desktop-build/targets/linux-x64/unsigned-artifacts/` and retain `unsigned` in their names. Building these files does not install them. RPM system installation/upgrade/removal and original AppImage startup remain separate validation tasks; prefer the directory workflow above for this preview.
+Artifacts are written under `apps/desktop/.desktop-build/targets/linux-x64/unsigned-artifacts/` and retain `unsigned` in their names. Building these files does not install them. RPM system installation/upgrade/removal and AppImage FUSE startup remain separate validation tasks; the release records the tested startup paths.
 
 ## Updates, removal and troubleshooting
 
@@ -169,4 +180,4 @@ Upstream GitHub Actions and Dependabot configurations are retained with `.disabl
 
 The upstream source is by DeepSeek; Fedora adaptation is maintained by [Li-Selena](https://github.com/Li-Selena). Preserve the original copyright and [MIT license](LICENSE); third-party components retain their own terms. See [third-party notices](THIRD_PARTY_NOTICES.md) and [brand guidelines](BRAND_GUIDELINES.md).
 
-The original import is a local archive whose exact official upstream commit is unverified. Local identifiers in the source record are not official release identifiers. Binary dependency and artwork redistribution review remains pending before installer publication.
+The original import is a local archive whose exact official upstream commit is unverified. Local identifiers in the source record are not official release identifiers. Release attachments preserve the packaged dependency inventory, licenses and source-access instructions; third-party licenses apply separately from this repository’s MIT license.

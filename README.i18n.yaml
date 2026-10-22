@@ -3,20 +3,38 @@
 # After editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write README.md
 /opendsh-for-linux:
-  en: 853acabe483a2f27
-  zh: 5f9b1a3e3ee30b7e
+  en: 93094364a6e10283
+  zh: 78c046573ceb6f0a
 /opendsh-for-linux/status:
-  en: 4cd69d02ded920aa
-  zh: 113d97be30bd5284
-/opendsh-for-linux/source-and-dependencies:
-  en: 5b1a07a5e4df25c1
-  zh: 880be6bf9a6bbd32
-/opendsh-for-linux/project-layout:
-  en: 2683694a1661e191
-  zh: 1c638db1d855ba47
-/opendsh-for-linux/contributing:
-  en: fcb1b21e77cd663d
-  zh: e37df2e8cb47438a
-/opendsh-for-linux/attribution-and-license:
-  en: 2c091f1160362e18
-  zh: 7e90fbc0b32b3b32
+  en: e8f987e2b59dd192
+  zh: 4ea7ea83393275e2
+/opendsh-for-linux/requirements:
+  en: f2735c5a85215e64
+  zh: 049e028b0afe3489
+/opendsh-for-linux/build-and-run-from-source:
+  en: 81582cd277e66b55
+  zh: 1b97e5aeeb885e5f
+/opendsh-for-linux/build-and-run-from-source/1-get-the-repository:
+  en: 279dd938a941e1c6
+  zh: 23f215e9b27fec79
+/opendsh-for-linux/build-and-run-from-source/2-create-an-isolated-local-environment:
+  en: 264db932457983c9
+  zh: 4b09602677307f0c
+/opendsh-for-linux/build-and-run-from-source/3-install-dependencies-and-build:
+  en: 5dee11ad42032d53
+  zh: 78b4b326ecbdcffb
+/opendsh-for-linux/build-and-run-from-source/4-start-the-directory-build:
+  en: ea6a97909031d9ca
+  zh: 9a43a72eac9f2aed
+/opendsh-for-linux/build-and-run-from-source/5-configure-the-first-session:
+  en: b67005d7eb96e9e7
+  zh: fbb1d1ca9d1c25e5
+/opendsh-for-linux/optional-appimage-and-rpm-output:
+  en: 1809b8af49d2afe6
+  zh: 7a7e51304dbe61fa
+/opendsh-for-linux/updates-removal-and-troubleshooting:
+  en: d4a6a67276df3481
+  zh: e318117307b9e1c3
+/opendsh-for-linux/source-contributing-and-license:
+  en: e970114be940e2d1
+  zh: f9a0a64b590166a5

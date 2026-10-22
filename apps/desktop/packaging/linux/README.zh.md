@@ -21,10 +21,10 @@ description: "生成本地未签名的 Linux x64 应用目录，包含内置运�
 
 ## 生成目录
 
-在 Linux x64 上安装本工作区锁定的依赖后，从 `source/` 目录运行。先加载工作区环境，让下载、临时文件、包存储与应用数据都保留在受保护的工作区内。
+在 Linux x64 上从仓库根目录运行。先按[源码配置步骤](../../../../README.zh.md#run-from-source)创建 `.local/fedora-env.sh` 并安装锁定依赖；本地环境将下载、临时文件、包存储与应用数据保留在当前项目内。
 
 ```sh
-source ../environment.sh
+source .local/fedora-env.sh
 pnpm --dir apps/desktop run package:linux --format dir
 ```
 
@@ -34,7 +34,7 @@ pnpm --dir apps/desktop run package:linux --format dir
 
 `--skip-build` 复用已有的完整 official-profile 构建；打包阶段仍会校验记录的构建 profile。`DSH_DESKTOP_LINUX_APP_ID` 可以覆盖默认本地标识 `local.deepseek.harness`。包使用源码清单中的版本，产物名称保留 `unsigned` 后缀。
 
-`DSH_DESKTOP_RUNTIME_STORE_DIR` 可选复用绝对路径的 pnpm store 目录，保留 lockfile 完整性检查及所有运行时 smoke 检查。省略时使用准备结束后删除的临时 store；空路径或相对路径会使准备失败。本工作区环境选择受保护根目录内的 `state/pnpm-store`，以复用已下载的原生与 Office 载荷。
+`DSH_DESKTOP_RUNTIME_STORE_DIR` 可选复用绝对路径的 pnpm store 目录，保留 lockfile 完整性检查及所有运行时 smoke 检查。省略时使用准备结束后删除的临时 store；空路径或相对路径会使准备失败。README 环境选择当前项目内的 `.local/pnpm-store`，以复用已下载的原生与 Office 载荷。
 
 <a id="artifact-formats"></a>
 
@@ -42,7 +42,7 @@ pnpm --dir apps/desktop run package:linux --format dir
 
 同一入口接受 `--format AppImage` 或 `--format rpm`。它先构建并校验解包目录，再封装已验证应用的私有副本。RPM 还要求系统已有 `rpmbuild` 执行文件。命令不会安装缺失的系统工具、安装 RPM、发布包或注册桌面关联。AppImage 与 RPM 的安装行为需要单独的平台验收；目录包是首个本地交付目标。
 
-如果 Fedora 构建机缺少 `libcrypt.so.1`，electron-builder 内置 FPM 需要经过校验的私有 `libxcrypt-compat` 副本，仅通过打包命令的 `LD_LIBRARY_PATH` 提供。这份兼容库属于构建依赖，不包含在应用内。
+如果 Fedora RPM 构建机缺少 `libcrypt.so.1`，electron-builder 内置 FPM 需要 `libxcrypt-compat`。[README](../../../../README.zh.md)给出了系统包安装方式，也可使用经过校验的私有副本，仅通过打包命令的 `LD_LIBRARY_PATH` 提供。这份兼容库属于构建依赖，不包含在应用内。
 
 本地入口拒绝其他操作系统与 CPU 架构。它移除继承的官方签名、更新策略和部署设置。包不含官方强制更新策略或更新源，也不参与官方上传或保留 CI 发布产物的流程。
 
@@ -62,4 +62,4 @@ Linux Host 和 CLI 使用 `resources/runtime/primary-runtime` 内置的独立 No
 
 Linux 本地清单设置 `dshDesktopRegisterProtocolClient: false`。省略时表示 `true`；`false` 禁止注册操作系统级 `dsh://` 关联，非布尔值会使启动失败。内部 `dsh-app://` 应用 scheme 仍然可用。
 
-验证执行文件时使用受保护工作区的启动环境，包括 `DSH_HOME`、Electron 的 `--user-data-dir` 参数及 `DSH_DESKTOP_HOST_ENVIRONMENT_MODE=inherit`。这会保留配置的临时与缓存目录，不运行用户登录 shell 的启动文件。打包成功不意味着获准安装 RPM、修改桌面关联或向受保护工作区之外写入。
+验证执行文件时使用 [README 启动步骤](../../../../README.zh.md#run)，包括 `DSH_HOME`、Electron 的 `--user-data-dir` 参数及 `DSH_DESKTOP_HOST_ENVIRONMENT_MODE=inherit`。这会保留配置的临时与缓存目录，不运行用户登录 shell 的启动文件。打包本身不会安装 RPM 或配置桌面关联。

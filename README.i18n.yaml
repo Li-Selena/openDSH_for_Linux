@@ -1,0 +1,22 @@
+# Bilingual-pair consistency record for README.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write README.md
+/opendsh-for-linux:
+  en: 853acabe483a2f27
+  zh: 5f9b1a3e3ee30b7e
+/opendsh-for-linux/status:
+  en: 4cd69d02ded920aa
+  zh: 113d97be30bd5284
+/opendsh-for-linux/source-and-dependencies:
+  en: 5b1a07a5e4df25c1
+  zh: 880be6bf9a6bbd32
+/opendsh-for-linux/project-layout:
+  en: 2683694a1661e191
+  zh: 1c638db1d855ba47
+/opendsh-for-linux/contributing:
+  en: fcb1b21e77cd663d
+  zh: e37df2e8cb47438a
+/opendsh-for-linux/attribution-and-license:
+  en: 2c091f1160362e18
+  zh: 7e90fbc0b32b3b32

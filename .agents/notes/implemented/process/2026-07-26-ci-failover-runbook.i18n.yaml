@@ -1,0 +1,40 @@
+# Bilingual-pair consistency record for 2026-07-26-ci-failover-runbook.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write .agents/notes/implemented/process/2026-07-26-ci-failover-runbook.md
+/agent-note-ci-failover-runbook-hosted-pools-in-house-pool:
+  en: 677b522817e84e2f
+  zh: f8518a7033b0fd54
+/agent-note-ci-failover-runbook-hosted-pools-in-house-pool/problem:
+  en: 7a7d0fd119f91009
+  zh: e9d15e825907cdc1
+/agent-note-ci-failover-runbook-hosted-pools-in-house-pool/decision:
+  en: 2a01b19d07da149f
+  zh: 08824708146ae79b
+/agent-note-ci-failover-runbook-hosted-pools-in-house-pool/decision/release-rehearsals-share-the-linux-switch:
+  en: 4ff7a96300e5225a
+  zh: 7f499419e3641642
+/agent-note-ci-failover-runbook-hosted-pools-in-house-pool/decision/what-the-in-house-pool-is:
+  en: 00d8934ed30e838c
+  zh: bdb5584fbaf27c7d
+/agent-note-ci-failover-runbook-hosted-pools-in-house-pool/decision/what-the-in-house-pool-is/windows-pool:
+  en: f395af725d1deaf1
+  zh: 896cedbb36c13758
+/agent-note-ci-failover-runbook-hosted-pools-in-house-pool/decision/switch-any-repository-writer-1-minute-no-merge:
+  en: 2e3829fd72d6b1b0
+  zh: 563f0abade7974f9
+/agent-note-ci-failover-runbook-hosted-pools-in-house-pool/capacity-during-failover:
+  en: 53a2683ce1bc60f2
+  zh: f09fd91469e03e4a
+/agent-note-ci-failover-runbook-hosted-pools-in-house-pool/capacity-during-failover/switch-back:
+  en: 63cf911019db8d2f
+  zh: 5eb3903b0ceb30db
+/agent-note-ci-failover-runbook-hosted-pools-in-house-pool/capacity-during-failover/trust-boundary:
+  en: c05bc0ceba304ff0
+  zh: 19ae9a2d70f25d33
+/agent-note-ci-failover-runbook-hosted-pools-in-house-pool/alternatives-considered:
+  en: e68b70d7caca52f1
+  zh: e6f0be792105a9e6
+/agent-note-ci-failover-runbook-hosted-pools-in-house-pool/consequences:
+  en: db6fbdba2f0e2c49
+  zh: c87ac45e4324dbd8

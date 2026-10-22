@@ -6,17 +6,17 @@
 
 ## 当前状态
 
-未签名 RPM 和 AppImage 安装包见[社区预发布页](https://github.com/Li-Selena/openDSH_for_Linux/releases/tag/v0.2.1-rc.2-fedora.1)。安装包内置 Node、pnpm 和 Python，运行它们不需要源码构建工具。下方仍保留源码构建步骤。
+修复后的 RPM 修订版 2 见[社区预发布页](https://github.com/Li-Selena/openDSH_for_Linux/releases/tag/v0.2.1-rc.2-fedora.2)，AppImage 仍在[预发布版 1](https://github.com/Li-Selena/openDSH_for_Linux/releases/tag/v0.2.1-rc.2-fedora.1)中提供。两者均未签名，内置 Node、pnpm 和 Python，运行它们不需要源码构建工具。下方仍保留源码构建步骤。
 
-目标环境是 Fedora 44、x86_64、KDE Wayland。干净源码构建通过全部 9 项构建检查和打包运行时检查，包括 Host、原生模块、终端/搜索、插件安装/移除及 Office 转换。AppImage 解包运行启动和 RPM 解包程序已使用全新配置验证。RPM 系统安装/升级/卸载、AppImage FUSE 启动、全新机器安装、真实 DeepSeek 推理及完整官方功能对齐尚未完成验收。
+目标环境是 Fedora 44、x86_64、KDE Wayland。干净源码构建通过全部 9 项构建检查和打包运行时检查，包括 Host、原生模块、终端/搜索、插件安装/移除及 Office 转换。RPM 首次安装、同版本重装、从修订版 1 升级及卸载在使用私有 RPM 数据库的隔离文件系统中验证。修订版 2 修复了替换时删除启动入口，以及 root 安装后资源和菜单元数据无法被普通用户读取的问题。这不代表宿主系统的 DNF 或 SELinux 集成已验收。AppImage 解包运行启动已验证；FUSE 启动、全新机器安装、真实 DeepSeek 推理及完整官方功能对齐尚未完成验收。
 
 ## 安装预发布包
 
-从预发布页下载所需格式及 `SHA256SUMS`。RPM 会集成到 Fedora 系统；AppImage 可从下载目录运行。两者都需要图形桌面、系统 GUI 库，以及用于模型请求的个人 API Key。详细安装、更新/卸载步骤、验证范围、许可证和第三方源码材料随预发布提供。
+从预发布版 2 下载 RPM 及其 `SHA256SUMS`，或从预发布版 1 下载 AppImage 及其校验文件。RPM 会集成到 Fedora 系统；AppImage 可从下载目录运行。两者都需要图形桌面、系统 GUI 库，以及用于模型请求的个人 API Key。各预发布提供详细安装、更新/卸载步骤、验证范围、许可证和第三方源码材料。
 
 ```bash
 sha256sum --ignore-missing -c SHA256SUMS
-sudo dnf install ./deepseek-harness-0.2.1-rc.2-linux-x86_64-unsigned.rpm
+sudo dnf install ./deepseek-harness-0.2.1-rc.2-linux-x86_64-r2-unsigned.rpm
 chmod +x deepseek-harness-0.2.1-rc.2-linux-x86_64-unsigned.AppImage
 ./deepseek-harness-0.2.1-rc.2-linux-x86_64-unsigned.AppImage --appimage-extract-and-run
 ```
@@ -158,7 +158,7 @@ sudo dnf install rpm-build libxcrypt-compat
 pnpm --dir apps/desktop run package:linux --format rpm --skip-build
 ```
 
-产物写入 `apps/desktop/.desktop-build/targets/linux-x64/unsigned-artifacts/`，文件名保留 `unsigned`。生成这些文件不等于安装了它们。RPM 系统安装/升级/卸载和 AppImage FUSE 启动仍需独立验收；预发布说明记录了已测试的启动路径。
+产物写入 `apps/desktop/.desktop-build/targets/linux-x64/unsigned-artifacts/`，文件名保留 `unsigned`；RPM 修订版 2 使用 `r2-unsigned.rpm`。生成这些文件不等于安装了它们。宿主系统的 DNF/SELinux 集成和 AppImage FUSE 启动仍需独立验收；各预发布说明记录了已测试的路径。
 
 ## 更新、移除与常见问题
 
@@ -166,7 +166,7 @@ pnpm --dir apps/desktop run package:linux --format rpm --skip-build
 - **移除：** 退出后可移除目录版产物或不再需要的源码目录；如需保留凭据和会话，请保留 `.local/run/`。本目录版流程没有安装系统 RPM。
 - **运行库缺失：** 用 `ldd "$dsh_app_dir/deepseek-harness"` 查看缺失库，再安装提供它的 Fedora 包；中文 Office 预览还需要可用的 CJK 字体。
 - **构建失败：** 查看 `apps/desktop/.desktop-build/packaging-runs/`，核对 Node 头文件、pnpm 版本、下载网络及首个失败阶段。分享日志前先脱敏。
-- **内存不足：** 构建前设置 `export DSH_GATE_CONCURRENCY=2`，降低并行步骤数。
+- **内存不足：** 构建前设置 `export DSH_GATE_CONCURRENCY=1`，顺序执行构建步骤。
 - **Corepack 或签名错误：** 按官方说明更新 Corepack，保留完整性校验。
 - **SOCKS 代理提示：** DSH 的 HTTP 代理配置需要 HTTP/HTTPS 代理地址，详见[网络指南](docs/user/guide/network-proxy.zh.md)。
 - **Node 加载错误：** 不要在 `NODE_OPTIONS` 中用 `--no-experimental-strip-types` 关闭原生 TypeScript 类型剥离。

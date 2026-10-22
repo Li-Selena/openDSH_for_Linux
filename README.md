@@ -6,17 +6,17 @@ Community Fedora desktop adaptation of [DeepSeek Harness](https://github.com/dee
 
 ## Status
 
-Unsigned RPM and AppImage packages are available in the [community preview release](https://github.com/Li-Selena/openDSH_for_Linux/releases/tag/v0.2.1-rc.2-fedora.1). Installers include Node, pnpm and Python; source build tools are unnecessary for running them. Source-build instructions remain below.
+The corrected RPM revision 2 is available in the [community preview release](https://github.com/Li-Selena/openDSH_for_Linux/releases/tag/v0.2.1-rc.2-fedora.2). AppImage remains in [preview 1](https://github.com/Li-Selena/openDSH_for_Linux/releases/tag/v0.2.1-rc.2-fedora.1). Both are unsigned and include Node, pnpm and Python; source build tools are unnecessary for running them. Source-build instructions remain below.
 
-The target is Fedora 44, x86_64, KDE Wayland. The clean-source build passed all 9 build gates and packaged-runtime checks, including Host, native modules, terminal/search, plugin installation/removal and Office conversions. AppImage extraction-mode startup and the extracted RPM application were checked with fresh profiles. RPM system installation/upgrade/removal, AppImage FUSE startup, fresh-machine installation, real DeepSeek inference and complete upstream feature parity remain unvalidated.
+The target is Fedora 44, x86_64, KDE Wayland. The clean-source build passed all 9 build gates and packaged-runtime checks, including Host, native modules, terminal/search, plugin installation/removal and Office conversions. RPM installation, same-version reinstallation, upgrade from revision 1 and removal are tested in an isolated filesystem with a private RPM database. Revision 2 fixes launcher removal during replacement and unreadable root-installed resources and menu metadata. This does not qualify host-system DNF or SELinux integration. AppImage extraction-mode startup was checked; FUSE startup, fresh-machine installation, real DeepSeek inference and complete upstream feature parity remain unvalidated.
 
 ## Install a preview package
 
-Download your preferred package and `SHA256SUMS` from the release page. The RPM requires Fedora system integration; AppImage can run from your download directory. Both need a graphical desktop, system GUI libraries and your own API Key for model requests. Detailed installation, update/removal instructions, verification scope, licenses and third-party source materials accompany the release.
+Download the RPM and its `SHA256SUMS` from preview 2, or AppImage and its checksum from preview 1. The RPM requires Fedora system integration; AppImage can run from your download directory. Both need a graphical desktop, system GUI libraries and your own API Key for model requests. Detailed installation, update/removal instructions, verification scope, licenses and third-party source materials accompany each release.
 
 ```bash
 sha256sum --ignore-missing -c SHA256SUMS
-sudo dnf install ./deepseek-harness-0.2.1-rc.2-linux-x86_64-unsigned.rpm
+sudo dnf install ./deepseek-harness-0.2.1-rc.2-linux-x86_64-r2-unsigned.rpm
 chmod +x deepseek-harness-0.2.1-rc.2-linux-x86_64-unsigned.AppImage
 ./deepseek-harness-0.2.1-rc.2-linux-x86_64-unsigned.AppImage --appimage-extract-and-run
 ```
@@ -158,7 +158,7 @@ sudo dnf install rpm-build libxcrypt-compat
 pnpm --dir apps/desktop run package:linux --format rpm --skip-build
 ```
 
-Artifacts are written under `apps/desktop/.desktop-build/targets/linux-x64/unsigned-artifacts/` and retain `unsigned` in their names. Building these files does not install them. RPM system installation/upgrade/removal and AppImage FUSE startup remain separate validation tasks; the release records the tested startup paths.
+Artifacts are written under `apps/desktop/.desktop-build/targets/linux-x64/unsigned-artifacts/` and retain `unsigned` in their names; RPM revision 2 uses `r2-unsigned.rpm`. Building these files does not install them. Host-system DNF/SELinux integration and AppImage FUSE startup remain separate validation tasks; each release records its tested paths.
 
 ## Updates, removal and troubleshooting
 
@@ -166,7 +166,7 @@ Artifacts are written under `apps/desktop/.desktop-build/targets/linux-x64/unsig
 - **Remove:** after exit, remove the directory build or the checkout when no longer needed; preserve `.local/run/` if you want to keep credentials and sessions. This directory workflow installs no system RPM.
 - **Missing runtime library:** inspect `ldd "$dsh_app_dir/deepseek-harness"` and install the Fedora package supplying the missing library. Chinese Office previews also need available CJK fonts.
 - **Build failure:** inspect `apps/desktop/.desktop-build/packaging-runs/`; check Node headers, pnpm version, download access and the first failed stage. Avoid sharing raw logs without redaction.
-- **Memory pressure:** set `export DSH_GATE_CONCURRENCY=2` before building to reduce concurrent steps.
+- **Memory pressure:** set `export DSH_GATE_CONCURRENCY=1` before building to run build steps sequentially.
 - **Corepack/signature error:** update Corepack using its official instructions; keep integrity checks enabled.
 - **SOCKS proxy warning:** DSH’s HTTP proxy configuration expects an HTTP/HTTPS proxy URL; check the [network guide](docs/user/guide/network-proxy.md).
 - **Node loader error:** do not disable native TypeScript stripping with `--no-experimental-strip-types` in `NODE_OPTIONS`.

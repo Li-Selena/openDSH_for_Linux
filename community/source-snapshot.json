@@ -1,0 +1,157 @@
+{
+  "schemaVersion": 1,
+  "preparedDate": "2026-10-22",
+  "sourceVersion": "0.2.1-rc.2",
+  "sourceLocalCommit": "4ca032d2d442cec40722af91fba3b273625288dd",
+  "sourceBranch": "fedora/desktop",
+  "localImportBaseline": "77af78f",
+  "officialUpstreamCommitVerified": false,
+  "trackedFilesExported": 16307,
+  "trackedBytesExported": 133251581,
+  "fedoraModifiedFiles": 45,
+  "gitHistoryIncluded": false,
+  "runtimeDataIncluded": false,
+  "communityPluginsIncluded": false,
+  "buildArtifactsIncluded": false,
+  "upstreamWorkflowsDisabled": [
+    {
+      "source": ".github/workflows/build-exe-for-python-sdk.yml",
+      "destination": ".github/workflows/build-exe-for-python-sdk.yml.disabled"
+    },
+    {
+      "source": ".github/workflows/build-exe-for-ssh-helper.yml",
+      "destination": ".github/workflows/build-exe-for-ssh-helper.yml.disabled"
+    },
+    {
+      "source": ".github/workflows/build-preview-cloudflare.yml",
+      "destination": ".github/workflows/build-preview-cloudflare.yml.disabled"
+    },
+    {
+      "source": ".github/workflows/ci-master.yml",
+      "destination": ".github/workflows/ci-master.yml.disabled"
+    },
+    {
+      "source": ".github/workflows/ci.yml",
+      "destination": ".github/workflows/ci.yml.disabled"
+    },
+    {
+      "source": ".github/workflows/desktop-publish.yml",
+      "destination": ".github/workflows/desktop-publish.yml.disabled"
+    },
+    {
+      "source": ".github/workflows/docs-pages.yml",
+      "destination": ".github/workflows/docs-pages.yml.disabled"
+    },
+    {
+      "source": ".github/workflows/e2e.yml",
+      "destination": ".github/workflows/e2e.yml.disabled"
+    },
+    {
+      "source": ".github/workflows/expected-filenames.yml",
+      "destination": ".github/workflows/expected-filenames.yml.disabled"
+    },
+    {
+      "source": ".github/workflows/issue-lifecycle.yml",
+      "destination": ".github/workflows/issue-lifecycle.yml.disabled"
+    },
+    {
+      "source": ".github/workflows/issue-policy.yml",
+      "destination": ".github/workflows/issue-policy.yml.disabled"
+    },
+    {
+      "source": ".github/workflows/macos-package.yml",
+      "destination": ".github/workflows/macos-package.yml.disabled"
+    },
+    {
+      "source": ".github/workflows/node-addon-system-release.yml",
+      "destination": ".github/workflows/node-addon-system-release.yml.disabled"
+    },
+    {
+      "source": ".github/workflows/node-addon-system.yml",
+      "destination": ".github/workflows/node-addon-system.yml.disabled"
+    },
+    {
+      "source": ".github/workflows/pi-ai-provider-e2e.yml",
+      "destination": ".github/workflows/pi-ai-provider-e2e.yml.disabled"
+    },
+    {
+      "source": ".github/workflows/publish-ssh-helper.yml",
+      "destination": ".github/workflows/publish-ssh-helper.yml.disabled"
+    },
+    {
+      "source": ".github/workflows/python-release.yml",
+      "destination": ".github/workflows/python-release.yml.disabled"
+    },
+    {
+      "source": ".github/workflows/release-publish.yml",
+      "destination": ".github/workflows/release-publish.yml.disabled"
+    },
+    {
+      "source": ".github/workflows/release-vendor-publish.yml",
+      "destination": ".github/workflows/release-vendor-publish.yml.disabled"
+    },
+    {
+      "source": ".github/workflows/release-vendor.yml",
+      "destination": ".github/workflows/release-vendor.yml.disabled"
+    },
+    {
+      "source": ".github/workflows/release.yml",
+      "destination": ".github/workflows/release.yml.disabled"
+    },
+    {
+      "source": ".github/workflows/sandbox.yml",
+      "destination": ".github/workflows/sandbox.yml.disabled"
+    },
+    {
+      "source": ".github/workflows/weighted-approval-review-event.yml",
+      "destination": ".github/workflows/weighted-approval-review-event.yml.disabled"
+    },
+    {
+      "source": ".github/workflows/weighted-approval.yml",
+      "destination": ".github/workflows/weighted-approval.yml.disabled"
+    },
+    {
+      "source": ".github/workflows/windows-package.yml",
+      "destination": ".github/workflows/windows-package.yml.disabled"
+    }
+  ],
+  "automatedScan": {
+    "scope": "Exported tracked source files only; selected credential formats and local personal references",
+    "candidateCount": 33,
+    "completeSecurityAudit": false,
+    "reviewedTestOrDocumentationCandidates": 33,
+    "unresolvedCandidatesInSelectedRules": 0
+  },
+  "buildRunForThisCopy": false,
+  "targetRepository": "https://github.com/Li-Selena/openDSH_for_Linux",
+  "publicationScope": "source-preview-only",
+  "upstreamDependabotDisabled": true,
+  "maintainer": "Li-Selena",
+  "binaryReleaseReady": false,
+  "initialExportVerification": {
+    "matchingCommittedFiles": 16304,
+    "editedDocumentationFiles": [
+      ".gitignore",
+      "README.md",
+      "README.zh.md"
+    ],
+    "workflowContentPreserved": true,
+    "executableModesPreserved": true,
+    "licensePreserved": true,
+    "sourceWorktreeClean": true,
+    "canonicalCmdLineEndingsRestored": [
+      "apps/desktop/cli/dsh.cmd",
+      "apps/desktop/scripts/node-bin/node.cmd",
+      "apps/desktop/scripts/windows-sign.cmd"
+    ]
+  },
+  "sourcePreviewPrepared": true,
+  "documentationValidation": "community/validation.json",
+  "communityPreparationChanges": [
+    "Community English/Chinese README and contribution guide, with regenerated pairing records.",
+    "Ignore local-only data and temporary dependency links. Preserve unified-diff and pinned vendor whitespace.",
+    "Disable inherited GitHub Actions and Dependabot configurations without changing their contents.",
+    "Repair active documentation links to disabled workflow files; frozen archived notes remain unchanged.",
+    "Preserve root README anchors used by upstream guides."
+  ]
+}

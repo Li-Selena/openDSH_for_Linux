@@ -1,0 +1,85 @@
+{
+  "date": "2026-10-22",
+  "publicationScope": "source-preview",
+  "environment": "Existing local workspace dependencies; isolated temporary and application-data paths. Not a clean-machine rebuild.",
+  "documentationChecks": {
+    "aggregateCommand": "pnpm run doc-sync",
+    "latestAggregatePassed": 41,
+    "latestAggregateFailed": 2,
+    "failedChecksRecheckedAfterFixes": [
+      {
+        "check": "CLI help reference",
+        "command": "pnpm run verify-cli-help",
+        "result": "passed",
+        "fix": "Remove inherited unsupported SOCKS proxy setting from the validation process environment."
+      },
+      {
+        "check": "markdown wrap",
+        "command": "node --import tsx/esm scripts/verify-md-wrap.ts",
+        "result": "passed",
+        "fix": "Separate compatibility anchors with blank lines."
+      }
+    ],
+    "passedInAggregate": [
+      "type equivalence",
+      "workflow guest source",
+      "Cordis inspect catalog",
+      "cordis catalog",
+      "client catalog",
+      "markdown links",
+      "tool catalog",
+      "config catalog",
+      "verify-mermaid",
+      "translation pairing",
+      "npm dependency catalog",
+      "skill plugin package list",
+      "export jsdoc",
+      "released persistence history",
+      "Session format catalog",
+      "doc graphs",
+      "concrete terms",
+      "Session format references",
+      "doc refs",
+      "public repository links",
+      "tsconfig paths",
+      "subsystem pages",
+      "package paths",
+      "package README Summaries",
+      "config source ownership",
+      "agent note classification",
+      "agent note format",
+      "skill invocation metadata",
+      "archived agent notes",
+      "repository references",
+      "translation prompt",
+      "doc budgets",
+      "upgrade guides",
+      "package README model experience",
+      "documentation standard tests",
+      "persistence type history",
+      "package README limitations",
+      "persistence catalog",
+      "doc-typecheck",
+      "documentation site checks",
+      "documentation build"
+    ],
+    "all43ChecksHavePassingEvidence": true,
+    "remainingFailedChecks": []
+  },
+  "privacyReview": {
+    "source": "Version-controlled source export and explicitly added community documentation only.",
+    "selectedCredentialFormatsAndPersonalPathScan": "passed; test literals and documentation examples reviewed separately",
+    "privateRuntimeProfilesIncluded": false,
+    "oldGitHistoryIncluded": false,
+    "installedDependenciesIncluded": false,
+    "completeSecurityAudit": false
+  },
+  "binaryRelease": {
+    "rebuilt": false,
+    "installersPublished": false,
+    "realDeepSeekInferenceValidated": false,
+    "rpmSystemLifecycleValidated": false,
+    "originalAppImageStartupValidated": false,
+    "completeBinaryDependencyLicenseAudit": false
+  }
+}

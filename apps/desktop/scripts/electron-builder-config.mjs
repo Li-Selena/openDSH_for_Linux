@@ -285,6 +285,7 @@ export function createElectronBuilderConfig(
       fpm: ['--rpm-compression', 'xz', '--rpm-compression-level', '6',
         // FPM indexes RPM-escaped paths, replacing spaces with question marks.
         '--rpm-attr', '0644,root,root:/opt/DeepSeek?Harness/resources/apparmor-profile',
+        '--rpm-attr', '0644,root,root:/usr/share/applications/deepseek-harness.desktop',
         '--iteration', '2', '--rpm-posttrans',
         fileURLToPath(new URL('../packaging/linux/rpm-posttrans.sh', import.meta.url))],
     } } : {}),

@@ -1,0 +1,2238 @@
+diff --git a/apps/desktop/README.i18n.yaml b/apps/desktop/README.i18n.yaml
+index 6060f79..912b03e 100644
+--- a/apps/desktop/README.i18n.yaml
++++ b/apps/desktop/README.i18n.yaml
+@@ -15,35 +15,35 @@
+   en: 05fd227f99ee535a
+   zh: 60d7d62bc0026973
+ /deepseek-harness-desktop/application-overview:
+-  en: e9b22f232837e131
+-  zh: fc5f3834b969d2d2
++  en: 262fd18c13d4b4c5
++  zh: ad5c22f04d076f93
+ /deepseek-harness-desktop/terminal-command:
+   en: 5f2d25a1d8472647
+   zh: 2acb5c5d7d1917e2
+ /deepseek-harness-desktop/closing-the-window-and-quitting:
+-  en: 24387a07ae4eb8e7
+-  zh: 0119352685cf273c
++  en: 17c6cfa219b76498
++  zh: 510140c41fdfe287
+ /deepseek-harness-desktop/key-technical-decisions:
+   en: 3724c53da4f7647b
+   zh: 76ae549d43c99bb4
+ /deepseek-harness-desktop/key-technical-decisions/bundled-workspace-dependencies:
+-  en: 3368ff9b955ada69
+-  zh: e9209ef6ad4fd305
++  en: 231b845b4898dc19
++  zh: 0a1d9e6d503077d1
+ /deepseek-harness-desktop/bundled-command-runtime:
+   en: 372297005b57a08b
+   zh: 074a635ac17e4362
+ /deepseek-harness-desktop/installation-ownership:
+-  en: 22153a298a6662e1
+-  zh: 3600803c8c9d0274
++  en: ff60d82be928fd48
++  zh: 10d18bba3fe842e5
+ /deepseek-harness-desktop/installation-ownership/runtime-and-plugin-activation:
+-  en: a1a47b09f4a72ba4
+-  zh: 7b1cf27f0b72cf31
++  en: e900d101aeaef763
++  zh: 9fb9652dfde8b4b4
+ /deepseek-harness-desktop/installation-ownership/host-environment:
+-  en: 98cf848762482d48
+-  zh: 74f9100a39ec8c2f
++  en: d518663c0f26b03c
++  zh: eda4c655bcee9ed7
+ /deepseek-harness-desktop/develop:
+-  en: fe6d23e6a3d3bc66
+-  zh: d60c8d3a55747916
++  en: cacbf97fb1492022
++  zh: 4f6c4ddfbc2d3ee0
+ /deepseek-harness-desktop/develop/startup-onboarding:
+   en: a51346b8d880ddba
+   zh: 7913214c1c66063c
+@@ -51,8 +51,8 @@
+   en: 617a89aeb28131b9
+   zh: 4d84bd5d86501c86
+ /deepseek-harness-desktop/package:
+-  en: ac31ebdd9de54f34
+-  zh: 921e534d5c4b3a16
++  en: dc8dba9b402a35e9
++  zh: 05723794179395fa
+ /deepseek-harness-desktop/windows-installer-interface:
+   en: 8cb4b7babbd8714d
+   zh: b4aebc1d2d152e01
+@@ -72,8 +72,8 @@
+   en: 8264b135871e8978
+   zh: 0939aafb1b2961fc
+ /deepseek-harness-desktop/known-limitations:
+-  en: c63d4dc7a9104954
+-  zh: a4c676e5b46a6ac0
++  en: 5f6fd882ce785427
++  zh: ef7be0dc8077a1ea
+ /deepseek-harness-desktop/dev-note:
+   en: 8e26b460ba31f21b
+   zh: fbcd0307b3867125
+diff --git a/apps/desktop/README.md b/apps/desktop/README.md
+index e0bb92c..c4e52bb 100644
+--- a/apps/desktop/README.md
++++ b/apps/desktop/README.md
+@@ -32,7 +32,7 @@ Desktop runs the Harness workspace in a native application. This reference cover
+ 
+ Desktop analytics follows the [product collection policy](../../packages/client/product-analytics/README.md), including its live application setting. Web usage is excluded. Update installation waits for its local analytics intake before locking API admission and stopping the Host. Intake has a one-second deadline; failure does not prevent installation, and collector delivery is not awaited.
+ 
+-The desktop application is an Electron shell around the complete dsh Web application. An Electron RunAsNode child starts the shared profile runner, and Electron immediately loads the packaged Web entry at `dsh-app://app/`. Its shared loading page waits for Host boot injections, then starts the client without navigating to another document. Electron forwards application HTTP requests to the authenticated Web Host, dropping connection-level response headers (`transfer-encoding`, `connection`, `keep-alive`) that describe the Node fetch rather than the resource, and marking plugin bundle responses `no-store` because their per-launch revisions would only accumulate in Chromium's disk cache; WebSocket streams connect to that Host with credentials attached only for the owned application window. Node IPC carries boot injections, readiness, and shutdown. Desktop listens on an OS-assigned port by default, so it cannot collide with Web’s `3080` or a reserved port; a `webserver.config.port` patch can override it.
++The desktop application is an Electron shell around the complete dsh Web application. A Node child starts the shared profile runner, and Electron immediately loads the packaged Web entry at `dsh-app://app/`. Its shared loading page waits for Host boot injections, then starts the client without navigating to another document. Electron forwards application HTTP requests to the authenticated Web Host, dropping connection-level response headers (`transfer-encoding`, `connection`, `keep-alive`) that describe the Node fetch rather than the resource, and marking plugin bundle responses `no-store` because their per-launch revisions would only accumulate in Chromium's disk cache; WebSocket streams connect to that Host with credentials attached only for the owned application window. Node IPC carries boot injections, readiness, and shutdown. Linux local packages use the bundled standalone Node for the Host and CLI; macOS, Windows and development launches use Electron RunAsNode. Desktop listens on an OS-assigned port by default, so it cannot collide with Web’s `3080` or a reserved port; a `webserver.config.port` patch can override it.
+ 
+ Desktop binds `127.0.0.1`, the address Electron dials for the ready URL and the WebSocket credential filter. WebSocket streams use `ws:` or `wss:` according to the Host listener; credentials require matching authority and scheme.
+ 
+@@ -40,7 +40,7 @@ The first application-menu command, **About DeepSeek Harness**, opens Electron's
+ 
+ Desktop’s local native directory flow opens an Electron folder dialog attached to the application window, restoring, showing, and focusing that window first. Concurrent requests share one dialog; cancellation returns no path and failures remain retryable. Ordinary Web uses the Host chooser. Browse mode lists Host directories. On Linux without zenity or kdialog, automatic selection uses browse instead of the Electron dialog.
+ 
+-Desktop ships one pnpm distribution at `resources/runtime/primary-runtime/dependencies/pnpm`. Build-time production installation, the installed `dsh` CLI, Creator and the Web Plugin Manager execute its `bin/pnpm.mjs` with Electron Node mode; package operations do not require pnpm on PATH. The private Node launcher environment applies only to package operations. Agent workspace dependencies copy the same self-contained primary-runtime payload into the Harness home and execute pnpm with its standalone Node.
++Desktop ships one pnpm distribution at `resources/runtime/primary-runtime/dependencies/pnpm`. Build-time production installation, the installed `dsh` CLI, Creator and the Web Plugin Manager execute its `bin/pnpm.mjs` with the selected Host runtime; package operations do not require pnpm on PATH. The private Node launcher environment applies only to package operations. Agent workspace dependencies copy the same self-contained primary-runtime payload into the Harness home and execute pnpm with its standalone Node.
+ 
+ Embedded Platform documents use a persistent WebContentsView partition keyed by a hash of the Platform origin and stable account ID. localStorage preferences, including dismissed notices, survive view closure and application restart; different accounts and origins use separate storage. The Host supplies the account ID from its latest successful profile read; while no ID is known, the document opens in a disposable partition that keeps no preference across opens. Opening a persistent partition clears cookies, filesystem, IndexedDB, Cache Storage, the HTTP and shader caches, service workers, and HTTP authentication before the document loads; a disposable partition clears all of its storage. Closing a view destroys the document, removes its request interceptors, and schedules the same cleanup, so authentication left by an unclean exit is cleared before the next document loads. The next open and application shutdown await that cleanup, and an update install waits for it before the installer takes over the exit. A failed cleanup rejects that open and blocks the same account until a later cleanup succeeds; other accounts keep opening. Sign-out destroys the document but retains account-scoped preferences for the next sign-in. A document already open in a disposable partition stays mounted when the account ID arrives for the same credential; the next open uses the account-scoped partition. The [storage decision](../../.agents/notes/implemented/architecture/2026-09-22-platform-browser-storage.md) describes the retention policy. Host sends account credentials through private Node IPC; account RPC and the Harness renderer receive no token. Before page scripts execute, the Platform preload performs one synchronous IPC to read the prepared main-process credential. It exposes displayMode, synchronous getAuthToken() and getLocale() getters, and onLocaleChange(listener), which returns an unsubscribe function. Both getters read preload memory without further IPC. The bootstrap includes the resolved Desktop language (`zh_CN` or `en_US`); Settings language changes update the preload cache and notify the open Platform document without reloading. Platform applies this language before its first render and does not persist it as a browser preference. The main-process handler performs only sender validation and an in-memory read; it never waits for Host, disk, or network. Trusted-page initialization failures retain embedded mode and make the getter throw, preventing browser-credential fallback. Only the owned Platform main frame on the configured issuer origin can initialize. Sign-out, credential replacement, Host shutdown, and view closure destroy the document. Cross-origin document navigation is blocked. HTTPS links requesting a new window open in the system browser without the embedded session or token; other schemes and URL credentials are rejected. Native views occupy the viewport below the Account feature’s return bar.
+ 
+@@ -68,6 +68,8 @@ Command registration is optional after installing Desktop. Use **Manage dsh Comm
+ 
+ Closing the main window (macOS close button and ⌘W; Windows ×, Alt+F4, and the taskbar Close window command) hides it; Windows asks for acknowledgement before the first hide. The page and the Host keep running, tasks continue, and the next show presents the same document with its session, drafts, and scroll position; a fullscreen macOS window leaves fullscreen before hiding. The window returns through the Dock icon, a second launch, or `dsh://open` on macOS, and through the tray on Windows. Minimize is unchanged. Closing the welcome window before the workspace opens quits on Windows and, on macOS, keeps the application in the Dock without a window.
+ 
++On Linux, closing the main or welcome window requests quitting through the task confirmation below. Cancel keeps the application open.
++
+ Windows keeps a tray icon for the whole run. Its tooltip is the product name, a single click shows and focuses the window, and the context menu offers Open DeepSeek Harness and Quit DeepSeek Harness in the shell locale. Before the first hide, the shared update-dialog overlay explains that running tasks continue and the window can be reopened from the system tray. Confirm hides the window and writes `background-close-confirmed` under Electron userData; Escape, dismissal, or dialog failure keeps the window visible and does not record acknowledgement. Repeated close requests focus the existing shell dialog. In-place updates retain the marker and uninstall removes it. The old `background-notice-shown` marker does not suppress this confirmation. Closing the window sends no system notification. The tray bitmaps are `resources/tray-windows.ico`, rendered from `resources/icon-windows.svg` at 16, 20, 24, 32, 40, 48, and 64 pixels by `pnpm run render:tray-icon`, and packaged as `resources/tray.ico`. macOS ships no menu bar icon.
+ 
+ Every ordinary quit entry — ⌘Q, the application menu, the Dock menu, the Windows tray and caption Application menu, and the quits caused by closing the mandatory-update or welcome window — asks the Host what it would interrupt. The Host answers over the private IPC channel with two facts: active tasks under the same rule as the update restart check (running agents including subagents and approval waits, queued messages, running or stopping jobs), and armed scheduled reminders reported by the `schedule` family of `workspace/session-activity` for the sessions loaded during this run. Neither fact, the quit proceeds silently. Otherwise a native message box without an owner window — hidden windows stay hidden — shows **Quit DeepSeek Harness?** with one of three localized explanations: running tasks will be interrupted, scheduled tasks will not run while the application is closed, or both. Quit is the default button and Cancel answers Esc; macOS places Cancel left of Quit, Windows places Quit left of Cancel, and the Windows task dialog shows the application icon and stays light regardless of the application theme. A Host that has not reached ready or has failed cannot run tasks, so the quit proceeds without asking. An inspection failure or a Host that misses the two-second deadline is treated as running tasks. While the box is open, another quit request joins it instead of stacking a second one (macOS also raises it; Electron exposes no handle to the Windows task dialog), the explanation does not change when work starts or ends, Quit stops the application without re-inspecting, and Cancel changes nothing. Cancelling a quit that closing the welcome window started shows the welcome window again.
+@@ -114,7 +116,7 @@ The shared Desktop/SDK runtime builder omits directories named `tests` beneath N
+ |---|---|---|
+ | Release identity | The shell API, Web client, backend, and plugin graph are qualified as one combination; independent versions would create untested combinations and ambiguous update availability. | Electron and `@deepseek-ai/dsh` always have the same exact version. A dsh upgrade is a Desktop release, even when the shell code is unchanged. |
+ | Runtime | The application must run without a system Node.js or pnpm installation. | dsh runs under Electron with `ELECTRON_RUN_AS_NODE=1` and `--expose-internals` and every package operation uses the bundled pnpm. Package-manager configuration and the Host environment follow the user's settings. Package scripts use a `node` shell launcher that forwards to Electron. |
+-| Package sources | Core installation at startup adds work even when offline. | `app.asar/dsh` carries a complete production dependency tree; the profile installs only external plugins. |
++| Package sources | Core installation at startup adds work even when offline. | `app.asar/dsh` (Linux: `resources/dsh`) carries a complete production dependency tree; the profile installs only external plugins. |
+ | State ownership | Sharing executable dependency graphs would let CLI and Desktop change each other's dsh, Cordis, plugin, or native-module versions, while two desktop processes could race on the same profile. | Electron acquires its process-lifetime single-instance lock before any profile access and exclusively owns `$DSH_HOME/profiles/desktop` plus its package-manager state. CLI and Desktop share supported product data under `$DSH_HOME`, but never executable packages, plugin activation, lockfiles, or `node_modules`. |
+ | Transport | Web serving and authentication share one implementation. | Electron loads packaged Web assets; the Host supplies boot injections and authenticated APIs. |
+ | Plugin changes | Desktop and Web need the same installation and activation behavior. | The main application uses the shared Web Plugin Manager and bundled pnpm. |
+@@ -138,7 +140,7 @@ Finish CLI commands before updating or uninstalling Desktop; the installer does
+ 
+ ## Installation ownership
+ 
+-Electron owns `$DSH_HOME/profiles/desktop`. Its `dependencies` contains packages installed by pnpm; `dsh.profile.bundles` contains the built-in bundles followed by enabled plugins. The signed application supplies dsh, the private Desktop Host, and their production packages from `resources/app.asar/dsh`. Packaged applications select runtime profile resolution without creating package links; development profiles use filesystem links. Both host and plugins execute in the same Electron Node-mode process; Desktop does not enable `--preserve-symlinks`. The CLI cannot boot this profile. The Desktop-installed command can manage its plugins while the application is quit; npm-installed dsh cannot mutate it.
++Electron owns `$DSH_HOME/profiles/desktop`. Its `dependencies` contains packages installed by pnpm; `dsh.profile.bundles` contains the built-in bundles followed by enabled plugins. The application supplies dsh, the private Desktop Host, and their production packages from `resources/app.asar/dsh` on macOS/Windows and the physical `resources/dsh` directory on Linux. Packaged applications select runtime profile resolution without creating package links; development profiles use filesystem links. Both host and plugins execute in the same Node process; Desktop does not enable `--preserve-symlinks`. The CLI cannot boot this profile. The Desktop-installed command can manage its plugins while the application is quit; npm-installed dsh cannot mutate it.
+ 
+ The application preload exposes boot readiness, fatal startup reporting, native directory selection, the `__DSH_HOST_PATHS__` bridge for composer path references, and the lease-scoped Browser bridge only to `dsh-app://app` documents. The same preload forwards the main-process machine description from `dshDesktop.deviceInfo()` as `name=value` fields separated by `; `: `platform`, `os`, `app_arch` (the architecture the application binary runs as, which differs from the hardware architecture under emulation), `cpu`, and `memory_gib` (total physical memory in GiB with one decimal). A field is omitted when its source is unavailable. The description carries no hostname, user name, or serial number. Product documents use the shared authenticated HTTP APIs and receive the Desktop marker, update presentation, and an action that opens native confirmation; they cannot choose artifacts or authorize installation. Plugin management uses the Web application's authenticated HTTP APIs. Electron serves update-dialog documents and assets locally at `dsh-app://shell/`, independently of Host readiness. Electron exposes no plugin-management IPC or separate management document. No renderer receives filesystem access, raw Electron IPC, a shell, or arbitrary pnpm arguments.
+ 
+@@ -160,7 +162,7 @@ On macOS the custom menu retains Electron's standard Window menu and application
+ 
+ ### Runtime and plugin activation
+ 
+-The signed `resources/app.asar/dsh/desktop-runtime.json` binds the shell version, Electron's Node version, platform, architecture, shared package versions, and final file inventory. Startup reads the metadata and checks shared package records. Release schema, shell version, target compatibility, and file integrity are verified during packaging. Reintroducing startup release comparisons requires a concrete installation failure that packaging validation and actual Host diagnostics cannot adequately explain. Core packages are never copied into profile storage or installed by pnpm at first launch.
++The runtime's `desktop-runtime.json` binds the shell version, selected Node version, platform, architecture, shared package versions, and final file inventory. Startup reads the metadata and checks shared package records. Release schema, shell version, target compatibility, and file integrity are verified during packaging. Reintroducing startup release comparisons requires a concrete installation failure that packaging validation and actual Host diagnostics cannot adequately explain. Core packages are never copied into profile storage or installed by pnpm at first launch.
+ 
+ 1. The main window loads the shared Web loading page offscreen from packaged static assets before profile preparation or backend startup. Shared profile initialization creates missing manifest, empty user patch, and pnpm workspace files without overwriting existing files.
+ 2. Before Host startup, Desktop validates the runtime descriptor and prepares the profile without modifying installed packages, declarations, or the lockfile; it removes only the `.dsh-module-fallback` projections earlier link-backend launches wrote, and startup never runs pnpm. Packages inside the profile keep native precedence, and installation package names resolve through the runtime resolution ([lookup order](../../.agents/notes/implemented/architecture/2026-09-19-profile-resolution-lookup-order.md); [cleanup removal](../../.agents/notes/implemented/simplification/2026-09-19-remove-desktop-profile-core-cleanup.md)).
+@@ -180,6 +182,8 @@ Recovery waits for Host shutdown before changing plugin activation. The native r
+ 
+ ### Host environment
+ 
++`DSH_DESKTOP_HOST_ENVIRONMENT_MODE` selects `login-shell` (default) or `inherit`. `inherit` preserves the launcher environment without discovering or running a login shell, including its temporary-directory and XDG paths; it is suitable for launchers that already supply a complete environment. Other values fail startup.
++
+ macOS and Linux GUI launches inherit only the session manager's environment, without variables exported by shell startup files. Before the first Host starts, Desktop runs the account's login shell (from the user database, not `$SHELL`) once as `<shell> -ilc` and reads its `env -0` output between delimiters, so `~/.zprofile` and `~/.zshrc` (or the shell's equivalents) take effect for the Host, agent shells, terminals, and profile configuration. Reading runs in parallel with profile preparation. The probe has no terminal input and sets `DISABLE_AUTO_UPDATE=true`, `ZSH_TMUX_AUTOSTARTED=true`, and `ZSH_TMUX_AUTOSTART=false` to keep oh-my-zsh and tmux plugins from blocking. Shell values replace inherited values except `PWD`, `OLDPWD`, `SHLVL`, `_`, those probe variables, and launcher-owned `DSH_*` and `ELECTRON_*` names; Desktop resolves paths such as `DSH_HOME` before the read, so the Host keeps the same values. The read completes at the closing delimiter, so background processes started by startup files may keep running with their output discarded. A candidate that fails to start, exits nonzero, prints no delimited output, or exceeds `DSH_DESKTOP_LOGIN_SHELL_TIMEOUT_MS` (integer milliseconds from 1000 through 2147483647, default `10000`; its process group is killed) is logged as a warning, and Desktop tries `/bin/zsh`, `/bin/bash`, and `/bin/sh` in turn; when all fail the Host uses the inherited environment. The dump command uses POSIX syntax, so an account shell such as csh, tcsh, or nushell fails and the Host receives the environment from the first system shell's startup files instead. Quitting Desktop during the read kills the running probe's process group. The result is read once per application process, so changes to shell startup files apply after quitting and reopening Desktop. Windows GUI launches already inherit the user and system environment variables from the registry, so Windows skips this step.
+ 
+ <a id="develop"></a>
+@@ -188,7 +192,7 @@ macOS and Linux GUI launches inherit only the session manager's environment, wit
+ 
+ The development application menu offers Reload Page (Cmd+R on macOS, Ctrl+R elsewhere) and Restart App and Host. Restart waits for Host shutdown before relaunching Electron and starting a new Host; neither action rebuilds source files.
+ 
+-`dev:desktop` builds the current Host, client bundles, Web frontend, and Electron shell, projects the built CLI and private Desktop Host packages with their workspace dependencies into a disposable desktop npm project, and launches Electron without resolving dsh from npm:
++Development launches support macOS, Windows, and Linux x64 with the commands below. `dev:desktop` builds the current Host, client bundles, Web frontend, and Electron shell, projects the built CLI and private Desktop Host packages with their workspace dependencies into a disposable desktop npm project, and launches Electron without resolving dsh from npm:
+ 
+ ```sh
+ pnpm run dev:desktop
+@@ -202,7 +206,7 @@ After an explicit build, `start:desktop` reconstructs the disposable project and
+ pnpm run start:desktop
+ ```
+ 
+-The Web counterparts are `pnpm run dev:web` and `pnpm run start:web`, documented in the [development guide](../../docs/development.md). Workspace development runs the current CLI and private Desktop Host packages under Electron RunAsNode. Plugin management and recovery use `$DSH_HOME/profiles/desktop`, separate from the disposable workspace runtime. The Host uses runtime module resolution in both development and packaged builds without creating official-package fallback links; developer-installed packages, including links, retain native priority. Use an unpacked application to exercise Electron RunAsNode, bundled pnpm, bundled dsh resources, plugin installation and repair paths.
++The Web counterparts are `pnpm run dev:web` and `pnpm run start:web`, documented in the [development guide](../../docs/development.md). Workspace development runs the current CLI and private Desktop Host packages under Electron RunAsNode. Plugin management and recovery use `$DSH_HOME/profiles/desktop`, separate from the disposable workspace runtime. The Host uses runtime module resolution in both development and packaged builds without creating official-package fallback links; developer-installed packages, including links, retain native priority. Use an unpacked application to exercise the packaged Host runtime, bundled pnpm, bundled dsh resources, plugin installation and repair paths.
+ 
+ The [native/renderer keyboard tests](tests/keyboard.spec.ts) compile as part of the repository Client typecheck. Their Desktop imports are limited to Cordis-free input, persistence, IPC, browser-guest, and overlay modules.
+ 
+@@ -240,6 +244,7 @@ The welcome window follows system appearance with the design’s Platform light/
+ Use the dedicated guides for build and release operations. Shared Windows runners have accepted credential and device isolation limits; read them before signing or executing branch code.
+ 
+ - [Desktop packaging](packaging/README.md): local and Actions builds, versions, deployment settings, artifacts, logs and verification.
++- [Local Linux x64 packages](packaging/linux/README.md): unsigned directory, AppImage and RPM builds with an independent application identity and no official update feed.
+ - [Windows signing and runner operations](windows-signing/README.md): machine setup, accepted isolation risks, signing credentials, token failures and cache maintenance.
+ - [Desktop publication](publishing/README.md): upload credentials, release identity, fixed downloads, update feeds and upload recovery.
+ 
+@@ -356,9 +361,11 @@ An unpackaged Electron process uses `.desktop-build/development/project` under i
+ 
+ ## Known limitations
+ 
+-- Account sign-in is not connected; the Sign in button is disabled. Windows material rendering still requires platform QA.
++- Linux account service support remains unverified; Linux account pages omit the macOS/Windows platform header. Windows material rendering still requires platform QA.
+ 
+ - Release signing, notarization, update hosting, and previous-version installed-artifact qualification require the production release environment.
++- Linux x64 supports unsigned [local packages](packaging/linux/README.md); production distribution, installed RPM behavior and other Linux desktops require separate qualification.
++- Linux development launches still use Electron Node mode, whose GLib conflicts can crash sharp image processing; use the local packaged application for image tasks.
+ - Dependency lifecycle scripts follow pnpm’s build permissions; Desktop provides no separate approval dialog.
+ - The desktop shell shares sessions, settings, credentials, workspaces, and storage under `$DSH_HOME` with CLI dsh, while executable packages, plugin activation, and lockfiles remain separate.
+ - Unpackaged startup on an Electron win32-arm64 host now succeeds, but the payload remains x64: the architecture check in `packages/skill/tool-workspace-dependencies/src/index.ts` compares the recorded payload architecture against the host `process.arch`, so the `load_workspace_dependencies` tool can still reject the primary runtime.
+diff --git a/apps/desktop/README.zh.md b/apps/desktop/README.zh.md
+index 430ac4a..2d59f59 100644
+--- a/apps/desktop/README.zh.md
++++ b/apps/desktop/README.zh.md
+@@ -32,7 +32,7 @@ Desktop 在原生应用中运行 Harness 工作区。本参考文档说明应用
+ 
+ 桌面埋点遵循[产品采集策略](../../packages/client/product-analytics/README.zh.md)及其动态应用配置，不包含 Web 使用情况。安装更新会等待该操作的本地埋点接收请求结束，再锁定 API 准入并停止 Host。接收请求的时限为一秒，失败不会阻止安装，也不等待收集端完成发送。
+ 
+-桌面应用是完整 dsh Web 应用外的一层 Electron 壳。Electron RunAsNode 子进程启动共享 profile runner，Electron 立即从 `dsh-app://app/` 加载打包内的 Web 入口。共享加载页等待 Host 启动注入，然后在同一文档中启动客户端。Electron 将应用 HTTP 请求转发给已认证的 Web Host，转发时丢弃描述 Node fetch 连接而非资源本身的响应头（`transfer-encoding`、`connection`、`keep-alive`），并把插件 bundle 响应标记为 `no-store`，因为其每次启动都变化的 revision 只会在 Chromium 磁盘缓存中累积；WebSocket 流连接到该 Host，仅为归属的应用窗口附加凭据。Node IPC 承载启动注入、就绪与关闭。Desktop 默认监听系统分配的端口，因此不会与 Web 的 `3080` 或系统保留端口冲突；可通过 `webserver.config.port` patch 覆盖。
++桌面应用是完整 dsh Web 应用外的一层 Electron 壳。Node 子进程启动共享 profile runner，Electron 立即从 `dsh-app://app/` 加载打包内的 Web 入口。共享加载页等待 Host 启动注入，然后在同一文档中启动客户端。Electron 将应用 HTTP 请求转发给已认证的 Web Host，转发时丢弃描述 Node fetch 连接而非资源本身的响应头（`transfer-encoding`、`connection`、`keep-alive`），并把插件 bundle 响应标记为 `no-store`，因为其每次启动都变化的 revision 只会在 Chromium 磁盘缓存中累积；WebSocket 流连接到该 Host，仅为归属的应用窗口附加凭据。Node IPC 承载启动注入、就绪与关闭。Linux 本地包的 Host 和 CLI 使用随包独立 Node；macOS、Windows 和开发启动使用 Electron RunAsNode。Desktop 默认监听系统分配的端口，因此不会与 Web 的 `3080` 或系统保留端口冲突；可通过 `webserver.config.port` patch 覆盖。
+ 
+ Desktop 绑定 `127.0.0.1`，即 Electron 为就绪 URL 与 WebSocket 凭据过滤器拨号的地址。WebSocket 流按 Host 监听器使用 `ws:` 或 `wss:`；附加凭据要求 authority 与 scheme 均匹配。
+ 
+@@ -40,7 +40,7 @@ Desktop 绑定 `127.0.0.1`，即 Electron 为就绪 URL 与 WebSocket 凭据过
+ 
+ Desktop 的本地原生目录流程打开绑定应用窗口的 Electron 文件夹对话框，并先恢复、显示和聚焦该窗口。并发请求共用一个对话框；取消不返回路径，失败后可以重试。普通 Web 使用 Host 选择器。浏览模式列出 Host 目录。Linux 缺少 zenity 或 kdialog 时，自动选择使用浏览模式，不使用 Electron 对话框。
+ 
+-Desktop 在 `resources/runtime/primary-runtime/dependencies/pnpm` 中携带一份 pnpm 分发包。构建时的生产依赖安装、安装版 `dsh` CLI、Creator 和 Web 插件管理器通过 Electron Node 模式执行其中的 `bin/pnpm.mjs`；包操作不要求 PATH 上存在 pnpm。私有 Node 启动器环境仅用于包操作。agent（智能体）的工作区依赖将同一份完整 primary-runtime 复制到 Harness 主目录，并使用其中的独立 Node 执行 pnpm。
++Desktop 在 `resources/runtime/primary-runtime/dependencies/pnpm` 中携带一份 pnpm 分发包。构建时的生产依赖安装、安装版 `dsh` CLI、Creator 和 Web 插件管理器通过选定的 Host 运行时执行其中的 `bin/pnpm.mjs`；包操作不要求 PATH 上存在 pnpm。私有 Node 启动器环境仅用于包操作。agent（智能体）的工作区依赖将同一份完整 primary-runtime 复制到 Harness 主目录，并使用其中的独立 Node 执行 pnpm。
+ 
+ Platform 内嵌文档使用持久化 WebContentsView 分区，分区名由 Platform 来源和稳定账号 ID 的哈希决定。localStorage 中的页面偏好（包括已关闭的通知）在关闭视图和重启应用后保留；不同账号和来源使用独立存储。账号 ID 来自 Host 最近一次成功的资料读取；尚无该 ID 时，文档在一次性分区中打开，该分区不跨次保留偏好。打开持久分区会先清理 Cookie、文件系统、IndexedDB、Cache Storage、HTTP 与着色器缓存、Service Worker 及 HTTP 认证状态；一次性分区则清理其全部存储。关闭视图会销毁文档、移除请求拦截器并安排相同的清理，因此异常退出遗留的认证会在下一个文档加载前被清除。下次打开和应用退出都会等待该清理完成，更新安装也会在安装器接管退出前等待。清理失败会使该次打开失败，并在后续清理成功前阻止同一账号打开；其他账号不受影响。退出登录会销毁文档，但保留账号偏好供下次登录使用。同一凭证下账号 ID 迟到时，已以一次性分区打开的文档保持挂载；下次打开使用账号分区。[存储决策](../../.agents/notes/implemented/architecture/2026-09-22-platform-browser-storage.zh.md)说明保留策略。Host 通过私有 Node IPC 发送账号凭证；账号 RPC 和 Harness 渲染进程不接收 token。Platform preload 在页面脚本执行前通过一次同步 IPC 读取主进程中已准备的凭证。它暴露 displayMode、同步的 getAuthToken() 和 getLocale() getter，以及返回取消订阅函数的 onLocaleChange(listener)。两个 getter 都只读取 preload 内存，不再调用 IPC。bootstrap 包含 Desktop 已解析的语言（`zh_CN` 或 `en_US`）；Settings 语言变更会更新 preload 缓存并通知已打开的 Platform 文档，无需重载。Platform 在首屏渲染前应用该语言，且不将其持久化为浏览器偏好。主进程处理器仅校验调用来源并读取内存，不等待 Host、磁盘或网络。可信页面初始化失败时保留内嵌模式，由 getter 抛错，避免回退到浏览器凭证。只有受控 Platform 页面中、位于所配置签发来源的主 frame 能完成初始化。退登、凭证替换、Host 关闭及视图关闭都会销毁文档。跨来源文档导航被阻止。请求新窗口的 HTTPS 链接在系统浏览器中打开，不携带内嵌会话或 token；其他协议及带 URL 凭证的链接被拒绝。原生视图占据 Account 功能返回栏下方的视口。
+ 
+@@ -68,6 +68,8 @@ macOS 安装会创建 `/usr/local/bin/dsh`；目录权限需要时，系统会
+ 
+ 关闭主窗口（macOS 的关闭按钮和 ⌘W；Windows 的 ×、Alt+F4 和任务栏"关闭窗口"）会隐藏窗口；Windows 首次隐藏前需要确认。页面和 Host 继续运行，任务不受影响，下次显示时仍是原来的文档，会话、草稿和滚动位置都保留；macOS 全屏窗口先退出全屏再隐藏。macOS 通过 Dock 图标、再次启动或 `dsh://open` 找回窗口，Windows 通过托盘找回。最小化行为不变。进入工作区前关闭欢迎窗口，Windows 上走退出流程，macOS 上应用留在 Dock 中且没有窗口。
+ 
++Linux 上关闭主窗口或欢迎窗口会通过下述任务确认流程请求退出。取消会保持应用打开。
++
+ Windows 在整个运行期间常驻托盘图标。悬停提示为产品名，单击显示并聚焦窗口，右键菜单提供壳语言下的"打开 DeepSeek Harness"和"退出 DeepSeek Harness"。首次隐藏前复用更新弹窗，显示“正在运行的任务不会中断，可在系统托盘中重新打开窗口”和“确认”按钮。确认后隐藏窗口，并在 Electron userData 下写入 `background-close-confirmed`；Esc、关闭弹窗或加载失败均保持主窗口可见，不记录确认。重复关闭请求会聚焦已有壳弹窗。覆盖更新保留标记，卸载删除标记。旧的 `background-notice-shown` 标记不会跳过此确认。关闭窗口不发送系统通知。托盘位图是 `resources/tray-windows.ico`，由 `pnpm run render:tray-icon` 从 `resources/icon-windows.svg` 按 16、20、24、32、40、48、64 像素分别渲染，打包为 `resources/tray.ico`。macOS 不提供菜单栏图标。
+ 
+ 所有普通退出入口——⌘Q、应用菜单、Dock 菜单、Windows 托盘和标题栏"应用程序"菜单，以及关闭强制更新窗口或欢迎窗口引起的退出——都先向 Host 查询退出会中断什么。Host 通过私有 IPC 通道回答两项事实：与更新重启检查同一口径的运行中任务（运行中的 agent，包括子代理和等待审批的回合、排队消息、运行中或停止中的后台任务），以及本次运行中已加载会话里由 `workspace/session-activity` 的 `schedule` family 报告的已挂定时器的提醒。两项都没有时直接退出，不弹框。否则弹出一个没有父窗口的原生消息框——隐藏的窗口保持隐藏——标题为**退出 DeepSeek Harness？**，正文为三种本地化说明之一：正在运行的任务将会中断、应用关闭期间定时任务不会运行，或两者兼有。"退出"是默认按钮，Esc 等同"取消"；macOS 上"取消"在"退出"左侧，Windows 上"退出"在"取消"左侧，Windows 任务对话框显示应用图标且不跟随应用主题、始终为浅色。Host 尚未就绪或已失败时不可能有任务在跑，直接退出。查询失败或 Host 超过两秒截止时间未答复，按运行中任务处理。弹框打开期间，再次请求退出只会并入同一弹框而不叠加新弹框（macOS 上还会把它提到前面；Electron 不暴露 Windows 任务对话框的句柄）；任务开始或结束不会改变文案；点"退出"不再重新查询即停止应用；点"取消"不发生任何变化。取消由关闭欢迎窗口引起的退出时，欢迎窗口会重新显示。
+@@ -114,7 +116,7 @@ Desktop/SDK 共享运行时构建器在复制或签名产物前，裁剪 NumPy 
+ |---|---|---|
+ | 发布身份 | 桌面壳 API、Web 客户端、后端与插件依赖图作为一个组合完成验证；独立版本会产生未经验证的组合，并让更新可用性含糊不清。 | Electron 与 `@deepseek-ai/dsh` 始终使用同一精确版本。即使桌面壳代码不变，升级 dsh 也必须发布新 Desktop 版本。 |
+ | 运行时 | 应用必须能够在没有系统 Node.js 或 pnpm 的机器上运行。 | dsh 通过设置 `ELECTRON_RUN_AS_NODE=1` 和 `--expose-internals` 的 Electron 运行，所有包操作都使用内置 pnpm。包管理器配置和 Host 环境遵循用户设置。包脚本通过 `node` shell 启动器转发给 Electron。 |
+-| 包来源 | 即使离线，启动时安装核心依赖也会增加开销。 | `app.asar/dsh` 携带完整生产依赖树；profile 只安装外部插件。 |
++| 包来源 | 即使离线，启动时安装核心依赖也会增加开销。 | `app.asar/dsh`（Linux 为 `resources/dsh`）携带完整生产依赖树；profile 只安装外部插件。 |
+ | 状态归属 | 共享可执行依赖图会让 CLI（命令行界面）与 Desktop 相互改变 dsh、Cordis、插件或原生模块版本，而两个桌面进程还可能争用同一个 profile。 | Electron 在访问任何 profile 前获取进程生命周期单实例锁，并独占 `$DSH_HOME/profiles/desktop` 及其包管理器状态。CLI 与 Desktop 共享 `$DSH_HOME` 下受支持的产品数据，但绝不共享可执行包、插件激活、锁文件或 `node_modules`。 |
+ | 传输 | Web 服务与认证共享一套实现。 | Electron 加载打包的 Web 资源；Host 提供启动注入和经过认证的 API。 |
+ | 插件变更 | Desktop 与 Web 需要一致的安装和激活行为。 | 主应用使用共享 Web 插件管理器和内置 pnpm。 |
+@@ -138,7 +140,7 @@ Welcome 加载共享 Toast 的配色和阴影变量，挂载在 body 下的通
+ 
+ ## 安装归属
+ 
+-Electron 拥有 `$DSH_HOME/profiles/desktop`。其 `dependencies` 包含 pnpm 安装的包；`dsh.profile.bundles` 包含内置 bundle，后接已启用插件。签名应用从 `resources/app.asar/dsh` 提供 dsh、私有 Desktop Host 及其生产依赖。打包应用选择 runtime profile 解析，不创建包链接；开发 profile 使用文件系统链接。宿主与插件在同一个 Electron Node 模式进程中执行；Desktop 不启用 `--preserve-symlinks`。CLI 不能启动此 profile。Desktop 内置命令可在应用退出后管理其插件；npm 安装的 dsh 不能修改它。
++Electron 拥有 `$DSH_HOME/profiles/desktop`。其 `dependencies` 包含 pnpm 安装的包；`dsh.profile.bundles` 包含内置 bundle，后接已启用插件。应用在 macOS/Windows 上从 `resources/app.asar/dsh`、在 Linux 上从物理目录 `resources/dsh` 提供 dsh、私有 Desktop Host 及其生产依赖。打包应用选择 runtime profile 解析，不创建包链接；开发 profile 使用文件系统链接。宿主与插件在同一个 Node 进程中执行；Desktop 不启用 `--preserve-symlinks`。CLI 不能启动此 profile。Desktop 内置命令可在应用退出后管理其插件；npm 安装的 dsh 不能修改它。
+ 
+ 应用 preload 只向 `dsh-app://app` 文档暴露启动就绪、致命启动失败上报、原生目录选择、用于 composer 路径引用的 `__DSH_HOST_PATHS__` 桥接和租约范围内的 Browser 桥接。同一个 preload 通过 `dshDesktop.deviceInfo()` 转发主进程采集的机器描述，按 `name=value` 字段以 `; ` 分隔：`platform`、`os`、`app_arch`（应用二进制实际运行的架构，模拟运行时与硬件架构不同）、`cpu` 和 `memory_gib`（物理内存总量，GiB，保留一位小数）。取值不可用时省略对应字段。该描述不包含主机名、用户名或序列号。产品页面还获得 Desktop 标记、更新展示数据和打开原生确认的操作，不能选择安装产物或授权安装。插件管理使用 Web 应用经过认证的 HTTP API；Electron 在 `dsh-app://shell/` 本地提供更新弹窗文档和资源，不依赖 Host 就绪。Electron 不提供插件管理 IPC 或独立管理页面。任何渲染进程都不会获得文件系统访问、原始 Electron IPC、shell 或任意 pnpm 参数。
+ 
+@@ -160,7 +162,7 @@ macOS 上自定义菜单保留 Electron 的标准 Window 菜单及应用隐藏
+ 
+ ### 运行时与插件激活
+ 
+-签名资源中的 `resources/app.asar/dsh/desktop-runtime.json` 绑定 shell 版本、Electron 的 Node 版本、平台、架构、共享包版本和最终文件清单。启动读取元数据，并检查共享包记录。发布 schema、shell 版本、目标兼容性和文件完整性在打包时验证。只有出现打包校验与实际 Host 诊断无法充分解释的具体安装故障，才重新引入启动时的发布信息比较。首次启动不会把核心包复制到 profile 存储或通过 pnpm 安装核心包。
++运行时的 `desktop-runtime.json` 绑定 shell 版本、选定的 Node 版本、平台、架构、共享包版本和最终文件清单。启动读取元数据，并检查共享包记录。发布 schema、shell 版本、目标兼容性和文件完整性在打包时验证。只有出现打包校验与实际 Host 诊断无法充分解释的具体安装故障，才重新引入启动时的发布信息比较。首次启动不会把核心包复制到 profile 存储或通过 pnpm 安装核心包。
+ 
+ 1. 主窗口在 profile 准备或后端启动前，从打包静态资源于屏幕外加载共享 Web 加载页。共享 profile 初始化创建缺失的 manifest、空用户 patch 与 pnpm workspace 文件，不覆盖现有文件。
+ 2. 启动 Host 前，Desktop 校验运行时描述符并准备 profile，不改动已安装的包、依赖声明与锁文件；只删除早期 Link 后端启动写下的 `.dsh-module-fallback` 投影，启动从不运行 pnpm。profile 内的包保持原生优先级，本体包名通过 runtime resolution 解析（[查找顺序](../../.agents/notes/implemented/architecture/2026-09-19-profile-resolution-lookup-order.zh.md)；[清理移除](../../.agents/notes/implemented/simplification/2026-09-19-remove-desktop-profile-core-cleanup.zh.md)）。
+@@ -180,6 +182,8 @@ macOS 上自定义菜单保留 Electron 的标准 Window 菜单及应用隐藏
+ 
+ ### Host 环境
+ 
++`DSH_DESKTOP_HOST_ENVIRONMENT_MODE` 可选择 `login-shell`（默认）或 `inherit`。`inherit` 保留启动器提供的环境，包括临时目录与 XDG 路径，不发现或运行登录 shell，适用于已提供完整环境的启动器。其他值会使启动失败。
++
+ macOS 和 Linux 从图形界面启动的程序只继承会话管理器提供的环境，不包含 shell 启动文件导出的变量。第一个 Host 启动之前，Desktop 以 `<shell> -ilc` 运行一次账户的登录 shell（取自用户数据库，不看 `$SHELL`），读取定界符之间的 `env -0` 输出，使 `~/.zprofile` 和 `~/.zshrc`（或该 shell 的对应文件）对 Host、agent shell、终端和 profile 配置生效。读取与 profile 准备并行进行。读取进程没有终端输入，并设置 `DISABLE_AUTO_UPDATE=true`、`ZSH_TMUX_AUTOSTARTED=true` 和 `ZSH_TMUX_AUTOSTART=false`，避免 oh-my-zsh 和 tmux 插件阻塞。shell 的值覆盖继承的值，但 `PWD`、`OLDPWD`、`SHLVL`、`_`、上述读取变量以及启动方自有的 `DSH_*` 和 `ELECTRON_*` 除外；Desktop 在读取之前已按 `DSH_HOME` 等变量解析路径，因此 Host 保持相同的值。读取在结束定界符出现时完成，因此启动文件启动的后台进程可以继续运行，其输出被丢弃。候选 shell 无法启动、以非零状态退出、没有输出定界内容或超过 `DSH_DESKTOP_LOGIN_SHELL_TIMEOUT_MS`（1000 到 2147483647 的整数毫秒，默认 `10000`；超时会结束其进程组）时，Desktop 记录一条警告，并依次尝试 `/bin/zsh`、`/bin/bash` 和 `/bin/sh`；全部失败时 Host 使用继承的环境。读取命令使用 POSIX 语法，因此 csh、tcsh 或 nushell 等账户 shell 会失败，Host 改为获得第一个系统 shell 的启动文件所设置的环境。读取期间退出 Desktop 会结束正在运行的读取进程组。每个应用进程只读取一次，因此修改 shell 启动文件后需要退出并重新打开 Desktop。Windows 从图形界面启动的程序已经从注册表继承用户和系统环境变量，因此 Windows 跳过这一步。
+ 
+ <a id="develop"></a>
+@@ -188,7 +192,7 @@ macOS 和 Linux 从图形界面启动的程序只继承会话管理器提供的
+ 
+ 开发环境应用菜单提供“刷新页面”（macOS 为 Cmd+R，其他平台为 Ctrl+R）和“重启应用与 Host”。重启会等待 Host 关闭，再重新启动 Electron 和新的 Host；这两项操作都不会重新构建源码。
+ 
+-`dev:desktop` 会构建当前 Host、客户端 bundle、Web 前端和 Electron 壳，把已构建的 CLI 包、私有 Desktop Host 包及其 workspace 依赖投影为一次性桌面 npm 项目，然后直接启动 Electron；这条路径不从 npm 解析 dsh：
++开发启动支持 macOS、Windows 和 Linux x64，均使用下述命令。`dev:desktop` 会构建当前 Host、客户端 bundle、Web 前端和 Electron 壳，把已构建的 CLI 包、私有 Desktop Host 包及其 workspace 依赖投影为一次性桌面 npm 项目，然后直接启动 Electron；这条路径不从 npm 解析 dsh：
+ 
+ ```sh
+ pnpm run dev:desktop
+@@ -202,7 +206,7 @@ pnpm run dev:desktop
+ pnpm run start:desktop
+ ```
+ 
+-Web 侧的对应命令是 `pnpm run dev:web` 与 `pnpm run start:web`，见[开发指南](../../docs/development.zh.md)。Workspace 开发使用 Electron RunAsNode 运行当前 CLI 与私有 Desktop Host 包，插件管理和恢复使用 `$DSH_HOME/profiles/desktop`，与一次性工作区运行时分离。Host 在开发与打包构建中都使用 runtime 模块解析，不创建官方包的 fallback 链接；开发者安装的包（包括链接）保留原生优先级。需要验证 Electron RunAsNode、内置 pnpm、内置 dsh 资源、插件安装和修复时，应运行未封装安装器的应用目录。
++Web 侧的对应命令是 `pnpm run dev:web` 与 `pnpm run start:web`，见[开发指南](../../docs/development.zh.md)。Workspace 开发使用 Electron RunAsNode 运行当前 CLI 与私有 Desktop Host 包，插件管理和恢复使用 `$DSH_HOME/profiles/desktop`，与一次性工作区运行时分离。Host 在开发与打包构建中都使用 runtime 模块解析，不创建官方包的 fallback 链接；开发者安装的包（包括链接）保留原生优先级。需要验证打包的 Host 运行时、内置 pnpm、内置 dsh 资源、插件安装和修复时，应运行未封装安装器的应用目录。
+ 
+ [原生输入与渲染进程键盘测试](tests/keyboard.spec.ts)直接纳入仓库 Client 类型检查。它只导入不依赖 Cordis 的 Desktop 输入、持久化、IPC、浏览器 guest 和蒙层模块。
+ 
+@@ -240,6 +244,7 @@ Desktop 在 Host 启动后、打开工作区前检查模型 API Key 引用是否
+ 构建与发布操作请使用独立指南。共享 Windows runner 存在已接受的凭据和设备隔离限制；签名或执行分支代码前必须阅读。
+ 
+ - [Desktop 打包](packaging/README.zh.md)：本地与 Actions 构建、版本、部署配置、产物、日志和验收。
++- [Linux x64 本地打包](packaging/linux/README.zh.md)：使用独立应用标识构建未签名目录、AppImage 和 RPM，不连接官方更新源。
+ - [Windows 签名与 runner 运维](windows-signing/README.zh.md)：机器部署、已接受的隔离风险、签名凭据、Token 失败与缓存维护。
+ - [Desktop 发布](publishing/README.zh.md)：上传凭据、发布标识、固定下载、更新清单和上传恢复。
+ 
+@@ -356,9 +361,11 @@ node apps/desktop/node_modules/pnpm/bin/pnpm.mjs --dir apps/desktop run test:upd
+ 
+ ## 已知限制
+ 
+-- 账号登录尚未接入；登录按钮禁用。Windows 材质效果仍需平台验证。
++- Linux 账号服务支持尚未验证；Linux 账号页不发送 macOS/Windows 平台标头。Windows 材质效果仍需平台验证。
+ 
+ - 发布签名、公证、更新托管和跨上一版本的已安装产物验证需要生产发布环境。
++- Linux x64 支持未签名的[本地测试包](packaging/linux/README.zh.md)；生产分发、已安装 RPM 行为及其他 Linux 桌面仍需单独验收。
++- Linux 开发启动仍使用 Electron Node 模式，其 GLib 冲突可能导致 sharp 图像处理崩溃；图像任务应使用本地打包应用。
+ - 依赖的生命周期脚本遵循 pnpm 的构建权限；Desktop 不提供单独的审批对话框。
+ - 桌面壳与 CLI dsh 共享 `$DSH_HOME` 下的会话、设置、凭据、工作区和存储，但可执行包、插件激活和锁文件彼此隔离。
+ - 在 Electron win32-arm64 宿主上，未打包启动现在可以成功，但载荷仍为 x64：`packages/skill/tool-workspace-dependencies/src/index.ts` 的架构校验会把载荷记录的架构与宿主 `process.arch` 比较，因此 `load_workspace_dependencies` 工具仍可能拒绝 primary runtime。
+diff --git a/apps/desktop/cli/dsh-linux b/apps/desktop/cli/dsh-linux
+new file mode 100644
+index 0000000..64d19d0
+--- /dev/null
++++ b/apps/desktop/cli/dsh-linux
+@@ -0,0 +1,14 @@
++#!/bin/sh
++# Run the bundled CLI without changing the invoking shell or working directory.
++set -e
++launcher=$0
++while [ -L "$launcher" ]; do
++  directory=$(CDPATH= cd -- "$(dirname -- "$launcher")" && pwd -P)
++  target=$(readlink "$launcher")
++  case "$target" in
++    /*) launcher=$target ;;
++    *) launcher=$directory/$target ;;
++  esac
++done
++resources=$(CDPATH= cd -- "$(dirname -- "$launcher")/../../.." && pwd -P)
++exec "$resources/runtime/primary-runtime/dependencies/node/bin/node" --expose-internals "$resources/dsh/node_modules/@deepseek-ai/dsh-desktop-host/lib/cli.js" "$@"
+diff --git a/apps/desktop/electron-builder.config.d.mts b/apps/desktop/electron-builder.config.d.mts
+index 0682e6e..8bec423 100644
+--- a/apps/desktop/electron-builder.config.d.mts
++++ b/apps/desktop/electron-builder.config.d.mts
+@@ -4,21 +4,28 @@ import type { AfterPackContext, BeforePackContext } from 'app-builder-lib'
+ export interface DesktopElectronBuilderConfig {
+   readonly appId: string
+   readonly artifactName: string
+-  readonly protocols: readonly [{ readonly name: 'DeepSeek Harness'; readonly schemes: readonly ['dsh'] }]
++  readonly protocols: readonly [] | readonly [{ readonly name: 'DeepSeek Harness'; readonly schemes: readonly ['dsh'] }]
+   readonly directories: {
+     readonly output: string
+   }
+-  readonly files: readonly [
+-    ...string[],
+-    { readonly from: string, readonly to: 'dsh', readonly filter: readonly ['**/*'] },
+-    { readonly from: string, readonly to: 'dsh/node_modules', readonly filter: readonly ['**/*'] },
+-  ]
+-  readonly extraMetadata: { readonly dshDesktopAppId: string }
++  readonly files: readonly (string | {
++    readonly from: string
++    readonly to: 'dsh' | 'dsh/node_modules'
++    readonly filter: readonly ['**/*']
++  })[]
++  readonly extraMetadata: {
++    readonly dshDesktopAppId: string
++    readonly dshDesktopRegisterProtocolClient?: boolean
++    readonly dshMandatoryUpdatePolicy?: unknown
++    readonly dshDesktopUpdateChannel: 'nightly' | 'latest'
++    readonly version?: string
++    readonly homepage?: string
++  }
+   readonly asarUnpack: readonly string[]
+   readonly extraResources: readonly [
+     { readonly from: string, readonly to: 'runtime' },
+     { readonly from: string, readonly to: 'icon.png' },
+-    ...{ readonly from: string, readonly to: 'tray.ico' }[],
++    ...{ readonly from: string, readonly to: 'tray.ico' | 'dsh' | 'dsh/node_modules', readonly filter?: readonly ['**/*'] }[],
+   ]
+   readonly mac: {
+     readonly extendInfo: { readonly NSMicrophoneUsageDescription: string }
+@@ -42,6 +49,13 @@ export interface DesktopElectronBuilderConfig {
+       readonly signingHashAlgorithms: readonly string[]
+     }
+   }
++  readonly linux: {
++    readonly category: 'Development'
++    readonly target: readonly ['AppImage']
++    readonly executableName?: string
++    readonly icon?: string
++    readonly maintainer?: string
++  }
+   readonly nsis: {
+     readonly include: string
+     readonly oneClick: false
+@@ -50,6 +64,9 @@ export interface DesktopElectronBuilderConfig {
+     readonly allowToChangeInstallationDirectory: false
+     readonly installerLanguages: readonly ['en_US', 'zh_CN']
+   }
++  readonly rpm?: {
++    readonly packageName: 'deepseek-harness'
++  }
+   readonly beforeBuild: () => Promise<boolean>
+   readonly beforePack: (context: BeforePackContext) => Promise<void>
+   readonly afterPack: (context: AfterPackContext) => Promise<void>
+diff --git a/apps/desktop/package.json b/apps/desktop/package.json
+index 1d44f92..114818a 100644
+--- a/apps/desktop/package.json
++++ b/apps/desktop/package.json
+@@ -26,6 +26,7 @@
+     "check:package": "tsx scripts/package-target.ts --check",
+     "restore:mac-proxy": "tsx scripts/macos-notarization-proxy.ts",
+     "package:dir": "tsx scripts/package-target.ts --dir",
++    "package:linux": "tsx scripts/package-linux.ts",
+     "package:mac:arm64": "tsx scripts/package-target.ts mac-arm64",
+     "package:mac:arm64:unsigned": "tsx scripts/package-target.ts mac-arm64 --unsigned",
+     "package:mac:arm64:dir": "tsx scripts/package-target.ts mac-arm64 --dir",
+diff --git a/apps/desktop/packaging/linux/README.i18n.yaml b/apps/desktop/packaging/linux/README.i18n.yaml
+new file mode 100644
+index 0000000..0471653
+--- /dev/null
++++ b/apps/desktop/packaging/linux/README.i18n.yaml
+@@ -0,0 +1,28 @@
++# Bilingual-pair consistency record for README.md (docs/i18n/README.md): per heading
++# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
++# After editing either side, bring the other along and re-record with:
++#   pnpm run verify-translation-pairing --write apps/desktop/packaging/linux/README.md
++/:
++  en: 3dfdd431752e2ddf
++  zh: ed2997bc24b54797
++/local-linux-packages:
++  en: d1e5d29e074fd1d3
++  zh: 1b2a3a647c625972
++/local-linux-packages/summary:
++  en: 5d9f2d51b61d2f88
++  zh: 498e2ed3807a7269
++/local-linux-packages/table-of-contents:
++  en: 01f8c401ba0818c8
++  zh: 617c41e80776bd19
++/local-linux-packages/build-a-directory:
++  en: 6ede82e3646acc0e
++  zh: 70714f11a5c281db
++/local-linux-packages/artifact-formats-and-limits:
++  en: f3eb97825330fc61
++  zh: f51c03a16f0875a4
++/local-linux-packages/runtime-and-plugin-files:
++  en: 944219e305e07098
++  zh: 985c92515bb35de4
++/local-linux-packages/startup-without-system-integration:
++  en: 9a98aeefc090e68e
++  zh: b6f8727bd6dca098
+diff --git a/apps/desktop/packaging/linux/README.md b/apps/desktop/packaging/linux/README.md
+new file mode 100644
+index 0000000..eb716dc
+--- /dev/null
++++ b/apps/desktop/packaging/linux/README.md
+@@ -0,0 +1,65 @@
++---
++description: "Build a local unsigned Linux x64 application directory with bundled runtimes, plugin support and native payload verification."
++---
++
++# Local Linux packages
++
++English | [中文](README.zh.md)
++
++## Summary
++
++Build a local unsigned Linux x64 application directory, then validate its bundled runtime and plugin support. AppImage and RPM are optional wrappers of the same directory; building does not install or publish them.
++
++## Table of Contents
++
++- [Build a directory](#build-directory)
++- [Artifact formats and limits](#artifact-formats)
++- [Runtime and plugin files](#runtime-files)
++- [Startup without system integration](#startup)
++
++<a id="build-directory"></a>
++
++## Build a directory
++
++Run from this workspace's `source/` directory on Linux x64 after installing its locked dependencies. Source the workspace environment to keep downloads, temporary files, package stores and application data inside the protected workspace.
++
++```sh
++source ../environment.sh
++pnpm --dir apps/desktop run package:linux --format dir
++```
++
++The command builds the official client profile, packs the current first-party packages, materializes a production dependency closure, prepares the bundled interpreters and builds the Electron application. It validates the physical runtime inventory, native modules, terminal execution, search, local plugin installation and Office conversion before reporting success. It does not install or launch the application.
++
++The output is `apps/desktop/.desktop-build/targets/linux-x64/unsigned-artifacts/linux-unpacked/`, with the executable `deepseek-harness`. The folder includes the Electron GUI in `resources/app.asar`, the physical Host runtime in `resources/dsh`, and bundled interpreters and CLI in `resources/runtime`. Retained build logs and stage outcomes live under `.desktop-build/packaging-runs/`.
++
++`--skip-build` reuses an existing complete official-profile build; package packing still verifies the recorded build profile. `DSH_DESKTOP_LINUX_APP_ID` overrides the default local identifier `local.deepseek.harness`. The package uses the source manifest version and retains the `unsigned` artifact suffix.
++
++`DSH_DESKTOP_RUNTIME_STORE_DIR` optionally reuses an absolute pnpm store directory, retaining lockfile integrity checks and every runtime smoke check. Omission uses a temporary store removed after preparation; empty or relative paths reject preparation. This workspace's environment selects `state/pnpm-store` inside the protected root, so previously downloaded native and Office payloads can be reused.
++
++<a id="artifact-formats"></a>
++
++## Artifact formats and limits
++
++The same entry point accepts `--format AppImage` or `--format rpm`. It first builds and checks the unpacked directory, then wraps a private copy of that verified application. RPM additionally requires an existing `rpmbuild` executable. The command does not install missing system tools, install RPMs, publish packages or register desktop associations. AppImage and RPM installation behavior require separate platform validation; the directory package is the first local delivery target.
++
++On a Fedora build host without `libcrypt.so.1`, electron-builder's bundled FPM needs a verified private `libxcrypt-compat` copy exposed through `LD_LIBRARY_PATH` only to the packaging command. This compatibility library is a build dependency and is not included in the application.
++
++The local entry point rejects other operating systems and CPU architectures. It strips inherited official signing, update-policy and deployment settings. The package has no official mandatory-update policy or update feed, and it does not participate in the official upload or retained-CI release workflow.
++
++<a id="runtime-files"></a>
++
++## Runtime and plugin files
++
++The runtime contains production files, rather than links into the development checkout. Installation resolves the system entry package's Linux platform dependency through the configured npm registry when no matching local tarball is supplied. Missing optional packages fail preparation instead of producing an incomplete application.
++
++The Linux Host and CLI run with the standalone Node bundled in `resources/runtime/primary-runtime`, while Electron runs the GUI. The complete production tree, including the system entry, Linux platform package and Office engine, remains physical under `resources/dsh`. Packaging verifies the complete runtime inventory, declared ELF architecture, Node-API exports and Landlock executable permissions before copying and again in the assembled application. Subprocesses receive executable filesystem paths.
++
++Third-party bundles stay in the writable Desktop profile under `DSH_HOME`; the application runtime remains immutable. The bundled package manager and the existing DSH version/build-script checks continue to govern plugin installation. See [the Desktop application](../../README.md) for shared runtime behavior.
++
++<a id="startup"></a>
++
++## Startup without system integration
++
++The Linux local manifest sets `dshDesktopRegisterProtocolClient: false`. Omission means `true`; `false` prevents OS-level `dsh://` association registration, and a non-boolean value rejects startup. The internal `dsh-app://` application scheme remains available.
++
++Use the protected workspace launcher environment when validating the executable, including `DSH_HOME`, the Electron `--user-data-dir` argument and `DSH_DESKTOP_HOST_ENVIRONMENT_MODE=inherit`. This preserves the configured temporary/cache directories without running user login-shell startup files. Packaging success does not authorize RPM installation, desktop association changes or writes outside the protected workspace.
+diff --git a/apps/desktop/packaging/linux/README.zh.md b/apps/desktop/packaging/linux/README.zh.md
+new file mode 100644
+index 0000000..08305c9
+--- /dev/null
++++ b/apps/desktop/packaging/linux/README.zh.md
+@@ -0,0 +1,65 @@
++---
++description: "生成本地未签名的 Linux x64 应用目录，包含内置运行时、插件支持与原生载荷校验。"
++---
++
++# Linux 本地包
++
++[English](README.md) | 中文
++
++## 概述
++
++生成本地未签名的 Linux x64 应用目录，并校验其内置运行时与插件支持。AppImage 和 RPM 是同一目录的可选封装；构建不会安装或发布它们。
++
++## 目录
++
++- [生成目录](#build-directory)
++- [产物格式与限制](#artifact-formats)
++- [运行时与插件文件](#runtime-files)
++- [不启用系统集成的启动](#startup)
++
++<a id="build-directory"></a>
++
++## 生成目录
++
++在 Linux x64 上安装本工作区锁定的依赖后，从 `source/` 目录运行。先加载工作区环境，让下载、临时文件、包存储与应用数据都保留在受保护的工作区内。
++
++```sh
++source ../environment.sh
++pnpm --dir apps/desktop run package:linux --format dir
++```
++
++该命令构建 official 客户端 profile，打包当前第一方包，生成生产依赖闭包，准备内置解释器，并构建 Electron 应用。命令在报告成功前校验物理运行时清单、原生模块、终端执行、搜索、本地插件安装与 Office 转换。它不会安装或启动应用。
++
++输出目录为 `apps/desktop/.desktop-build/targets/linux-x64/unsigned-artifacts/linux-unpacked/`，执行文件为 `deepseek-harness`。目录包含 `resources/app.asar` 内的 Electron GUI、`resources/dsh` 内的物理 Host 运行时，以及 `resources/runtime` 内的解释器和 CLI。保留的构建日志和阶段结果位于 `.desktop-build/packaging-runs/` 下。
++
++`--skip-build` 复用已有的完整 official-profile 构建；打包阶段仍会校验记录的构建 profile。`DSH_DESKTOP_LINUX_APP_ID` 可以覆盖默认本地标识 `local.deepseek.harness`。包使用源码清单中的版本，产物名称保留 `unsigned` 后缀。
++
++`DSH_DESKTOP_RUNTIME_STORE_DIR` 可选复用绝对路径的 pnpm store 目录，保留 lockfile 完整性检查及所有运行时 smoke 检查。省略时使用准备结束后删除的临时 store；空路径或相对路径会使准备失败。本工作区环境选择受保护根目录内的 `state/pnpm-store`，以复用已下载的原生与 Office 载荷。
++
++<a id="artifact-formats"></a>
++
++## 产物格式与限制
++
++同一入口接受 `--format AppImage` 或 `--format rpm`。它先构建并校验解包目录，再封装已验证应用的私有副本。RPM 还要求系统已有 `rpmbuild` 执行文件。命令不会安装缺失的系统工具、安装 RPM、发布包或注册桌面关联。AppImage 与 RPM 的安装行为需要单独的平台验收；目录包是首个本地交付目标。
++
++如果 Fedora 构建机缺少 `libcrypt.so.1`，electron-builder 内置 FPM 需要经过校验的私有 `libxcrypt-compat` 副本，仅通过打包命令的 `LD_LIBRARY_PATH` 提供。这份兼容库属于构建依赖，不包含在应用内。
++
++本地入口拒绝其他操作系统与 CPU 架构。它移除继承的官方签名、更新策略和部署设置。包不含官方强制更新策略或更新源，也不参与官方上传或保留 CI 发布产物的流程。
++
++<a id="runtime-files"></a>
++
++## 运行时与插件文件
++
++运行时包含生产文件，不是指向开发源码的链接。没有匹配的本地 tarball 时，安装过程通过配置的 npm registry 解析 system entry 包的 Linux 平台依赖。缺少可选平台包会使准备失败，避免生成不完整应用。
++
++Linux Host 和 CLI 使用 `resources/runtime/primary-runtime` 内置的独立 Node，Electron 运行 GUI。完整生产依赖树保留在物理目录 `resources/dsh` 下，包括 system entry、Linux 平台包和 Office 引擎。打包过程在复制前以及应用组装后，校验完整运行时清单、声明的 ELF 架构、Node-API 导出与 Landlock 执行权限。子进程收到可执行的文件系统路径。
++
++第三方 bundle 保存在 `DSH_HOME` 下可写的 Desktop profile 中，应用运行时保持不可变。内置包管理器及已有 DSH 版本、构建脚本检查继续管理插件安装。共享运行时行为见 [Desktop 应用](../../README.zh.md)。
++
++<a id="startup"></a>
++
++## 不启用系统集成的启动
++
++Linux 本地清单设置 `dshDesktopRegisterProtocolClient: false`。省略时表示 `true`；`false` 禁止注册操作系统级 `dsh://` 关联，非布尔值会使启动失败。内部 `dsh-app://` 应用 scheme 仍然可用。
++
++验证执行文件时使用受保护工作区的启动环境，包括 `DSH_HOME`、Electron 的 `--user-data-dir` 参数及 `DSH_DESKTOP_HOST_ENVIRONMENT_MODE=inherit`。这会保留配置的临时与缓存目录，不运行用户登录 shell 的启动文件。打包成功不意味着获准安装 RPM、修改桌面关联或向受保护工作区之外写入。
+diff --git a/apps/desktop/scripts/desktop-build-paths.d.mts b/apps/desktop/scripts/desktop-build-paths.d.mts
+index c7b8173..daad353 100644
+--- a/apps/desktop/scripts/desktop-build-paths.d.mts
++++ b/apps/desktop/scripts/desktop-build-paths.d.mts
+@@ -1,4 +1,5 @@
+-import type { DesktopAutoUpdateTarget } from './desktop-auto-update-environment.mjs'
++/** Desktop build targets available to development launchers and runtime preparation. */
++export type DesktopBuildTarget = 'mac-arm64' | 'mac-x64' | 'win-x64' | 'linux-x64'
+ 
+ /** Mutable target directories plus the shared immutable download cache. */
+ export interface DesktopTargetBuildPaths {
+@@ -28,14 +29,14 @@ export function resolveDesktopBuildTarget(
+   env?: NodeJS.ProcessEnv,
+   hostPlatform?: NodeJS.Platform,
+   hostArch?: string,
+-): DesktopAutoUpdateTarget
++): DesktopBuildTarget
+ 
+ /**
+  * Return the mutable preparation and artifact directories owned by one release target.
+  * @param target - Supported Desktop target name.
+  * @returns Target paths plus the shared immutable download cache.
+  */
+-export function desktopTargetBuildPaths(target: DesktopAutoUpdateTarget): DesktopTargetBuildPaths
++export function desktopTargetBuildPaths(target: DesktopBuildTarget): DesktopTargetBuildPaths
+ 
+ /**
+  * Return the platform and architecture of the payload one release target prepares.
+@@ -43,8 +44,8 @@ export function desktopTargetBuildPaths(target: DesktopAutoUpdateTarget): Deskto
+  * @param target - Supported Desktop target name.
+  * @returns Platform and architecture of the prepared payload.
+  */
+-export function desktopTargetPlatform(target: DesktopAutoUpdateTarget): {
+-  readonly platform: 'darwin' | 'win32'
++export function desktopTargetPlatform(target: DesktopBuildTarget): {
++  readonly platform: 'darwin' | 'win32' | 'linux'
+   readonly arch: 'arm64' | 'x64'
+ }
+ 
+diff --git a/apps/desktop/scripts/desktop-build-paths.mjs b/apps/desktop/scripts/desktop-build-paths.mjs
+index e577b1d..773658f 100644
+--- a/apps/desktop/scripts/desktop-build-paths.mjs
++++ b/apps/desktop/scripts/desktop-build-paths.mjs
+@@ -4,14 +4,14 @@ import { join, resolve } from 'node:path'
+ 
+ const APP_ROOT = resolve(import.meta.dirname, '..')
+ const BUILD_ROOT = join(APP_ROOT, '.desktop-build')
+-const SUPPORTED_TARGETS = new Set(['mac-arm64', 'mac-x64', 'win-x64'])
++const SUPPORTED_TARGETS = new Set(['mac-arm64', 'mac-x64', 'win-x64', 'linux-x64'])
+ 
+ /**
+  * Resolve the fixed build target selected by a packaging environment.
+  * @param {NodeJS.ProcessEnv} env - Packaging environment.
+  * @param {NodeJS.Platform} hostPlatform - Build-host platform used when no target override exists.
+  * @param {string} hostArch - Build-host architecture used when no target override exists.
+- * @returns {'mac-arm64' | 'mac-x64' | 'win-x64'} Supported Desktop target name.
++ * @returns {'mac-arm64' | 'mac-x64' | 'win-x64' | 'linux-x64'} Supported Desktop build target name.
+  */
+ export function resolveDesktopBuildTarget(
+   env = process.env,
+@@ -26,7 +26,7 @@ export function resolveDesktopBuildTarget(
+   if (!SUPPORTED_TARGETS.has(target)) {
+     throw new Error(`desktop build paths: unsupported target ${target}`)
+   }
+-  return /** @type {'mac-arm64' | 'mac-x64' | 'win-x64'} */ (target)
++  return /** @type {'mac-arm64' | 'mac-x64' | 'win-x64' | 'linux-x64'} */ (target)
+ }
+ 
+ function assertSupportedTarget(target) {
+@@ -37,7 +37,7 @@ function assertSupportedTarget(target) {
+ 
+ /**
+  * Return the mutable preparation and artifact directories owned by one release target.
+- * @param {'mac-arm64' | 'mac-x64' | 'win-x64'} target - Supported Desktop target name.
++ * @param {'mac-arm64' | 'mac-x64' | 'win-x64' | 'linux-x64'} target - Supported Desktop build target name.
+  * @returns {{ root: string, artifacts: string, unsignedArtifacts: string, unnotarizedArtifacts: string, runtime: string, packageSet: string, dsh: string, dshPnpm: string, electron: string, packedDsh: string, packedVendor: string, packedLandlock: string, downloads: string }} Target paths plus the shared immutable download cache.
+  */
+ export function desktopTargetBuildPaths(target) {
+@@ -64,13 +64,13 @@ export function desktopTargetBuildPaths(target) {
+ /**
+  * Return the platform and architecture of the payload one release target prepares.
+  * Windows is prepared as x64 only, so this differs from the build host on an arm64 Windows machine.
+- * @param {'mac-arm64' | 'mac-x64' | 'win-x64'} target - Supported Desktop target name.
+- * @returns {{ platform: 'darwin' | 'win32', arch: 'arm64' | 'x64' }} Platform and architecture of the prepared payload.
++ * @param {'mac-arm64' | 'mac-x64' | 'win-x64' | 'linux-x64'} target - Supported Desktop build target name.
++ * @returns {{ platform: 'darwin' | 'win32' | 'linux', arch: 'arm64' | 'x64' }} Platform and architecture of the prepared payload.
+  */
+ export function desktopTargetPlatform(target) {
+   assertSupportedTarget(target)
+   return {
+-    platform: /** @type {'darwin' | 'win32'} */ (target === 'win-x64' ? 'win32' : 'darwin'),
++    platform: /** @type {'darwin' | 'win32' | 'linux'} */ (target === 'win-x64' ? 'win32' : target === 'linux-x64' ? 'linux' : 'darwin'),
+     arch: /** @type {'arm64' | 'x64'} */ (target === 'mac-arm64' ? 'arm64' : 'x64'),
+   }
+ }
+diff --git a/apps/desktop/scripts/development-project.ts b/apps/desktop/scripts/development-project.ts
+index d544ce6..9a6b2a5 100644
+--- a/apps/desktop/scripts/development-project.ts
++++ b/apps/desktop/scripts/development-project.ts
+@@ -16,8 +16,7 @@ import { dirname, join } from 'node:path'
+ import { createDevelopmentProjectMetadata } from '../src/project-manager.ts'
+ import type { DesktopRelease } from '../src/release.ts'
+ import { DESKTOP_RUNTIME_FILE, type DesktopRuntimeDescriptor } from '../src/runtime-tree.ts'
+-import type { DesktopAutoUpdateTarget } from './desktop-auto-update-environment.mjs'
+-import { desktopTargetPlatform } from './desktop-build-paths.mjs'
++import { desktopTargetPlatform, type DesktopBuildTarget } from './desktop-build-paths.mjs'
+ 
+ interface PackageManifest {
+   readonly name?: string
+@@ -38,7 +37,7 @@ export interface DevelopmentProjectOptions {
+   /** Release identity written into the disposable project metadata. */
+   readonly release: DesktopRelease
+   /** Build target whose prepared payload the disposable project runs against. */
+-  readonly target: DesktopAutoUpdateTarget
++  readonly target: DesktopBuildTarget
+ }
+ 
+ function readManifest(path: string): PackageManifest {
+diff --git a/apps/desktop/scripts/electron-builder-config.mjs b/apps/desktop/scripts/electron-builder-config.mjs
+index 4b9cd27..2ba7449 100644
+--- a/apps/desktop/scripts/electron-builder-config.mjs
++++ b/apps/desktop/scripts/electron-builder-config.mjs
+@@ -28,6 +28,7 @@ import { installWindowsDirectoryInstaller } from './windows-directory-installer.
+ import { preserveWindowsRuntimeSignature, signWindowsCode } from './windows-runtime-signature.mjs'
+ import { prepareWindowsAsarUnpack, verifyWindowsAsarUnpack } from './windows-asar-unpack.mjs'
+ import { recordPackagingEvent } from './packaging-run.mjs'
++import { verifyLinuxSystemRuntime } from './linux-runtime.mjs'
+ import {
+   resolveMacOSAppUpdateFeed,
+   verifyMacOSAppUpdateConfig,
+@@ -65,7 +66,9 @@ export function createElectronBuilderConfig(
+   if (skipNotarization && (unsigned || resolvedPlatform !== 'darwin')) throw new Error('Skipping notarization requires a signed macOS build')
+   const packagesMacOS = targetPlatform === 'darwin' || (targetPlatform === undefined && hostPlatform === 'darwin')
+   const packagesWindows = resolvedPlatform === 'win32'
+-  const policy = packagesMacOS && unsigned ? undefined : resolveDesktopPolicyEnvironment(env)
++  const packagesLinux = resolvedPlatform === 'linux'
++  if (packagesLinux && (!unsigned || resolvedArch !== 'x64')) throw new Error('desktop package: Linux supports unsigned local x64 packages only')
++  const policy = (packagesMacOS || packagesLinux) && unsigned ? undefined : resolveDesktopPolicyEnvironment(env)
+   if (resolvedPlatform === 'win32') installWindowsDirectoryInstaller()
+   const macOSSigning = packagesMacOS && !unsigned ? resolveMacOSSigningEnvironment(env) : undefined
+   if (packagesMacOS && !unsigned && !skipNotarization) resolveMacOSNotarizationEnvironment(env)
+@@ -105,11 +108,13 @@ export function createElectronBuilderConfig(
+   const packaged = resolveDesktopBuildCommit(env)
+   return {
+     appId,
+-    protocols: [{ name: 'DeepSeek Harness', schemes: ['dsh'] }],
++    protocols: packagesLinux ? [] : [{ name: 'DeepSeek Harness', schemes: ['dsh'] }],
+     extraMetadata: {
+       dshDesktopAppId: appId,
+       dshDesktopUpdateChannel: update?.channel ?? 'nightly',
+       ...(policy === undefined ? {} : { dshMandatoryUpdatePolicy: policy }),
++      ...(packagesLinux ? { dshDesktopRegisterProtocolClient: false,
++        homepage: 'https://github.com/deepseek-ai/deepseek-harness' } : {}),
+       ...buildVersion === productVersion ? {} : { version: buildVersion },
+       ...packaged === undefined ? {} : { dshBuildCommit: packaged.commit, dshBuildDirty: packaged.dirty },
+     },
+@@ -145,14 +150,21 @@ export function createElectronBuilderConfig(
+       'package.json',
+       '!node_modules/**/*.{js,cjs,mjs,ts,cts,mts,css}.map',
+       '!node_modules/**/*.tsbuildinfo',
+-      { from: buildPaths.dsh, to: 'dsh', filter: ['**/*'] },
+-      // electron-builder excludes a source directory's root node_modules.
+-      { from: join(buildPaths.dsh, 'node_modules'), to: 'dsh/node_modules', filter: ['**/*'] },
++      ...(packagesLinux ? [] : [
++        { from: buildPaths.dsh, to: 'dsh', filter: ['**/*'] },
++        // electron-builder excludes a source directory's root node_modules.
++        { from: join(buildPaths.dsh, 'node_modules'), to: 'dsh/node_modules', filter: ['**/*'] },
++      ]),
+     ],
+     asarUnpack: unpack,
+     extraResources: [
+       { from: buildPaths.runtime, to: 'runtime' },
+       { from: fileURLToPath(new URL('../resources/icon-windows.png', import.meta.url)), to: 'icon.png' },
++      // Standalone Node requires physical runtime files; Electron still loads the GUI from ASAR.
++      ...(packagesLinux ? [
++        { from: buildPaths.dsh, to: 'dsh', filter: ['**/*'] },
++        { from: join(buildPaths.dsh, 'node_modules'), to: 'dsh/node_modules', filter: ['**/*'] },
++      ] : []),
+       // Windows tray bitmaps; macOS keeps the Dock and ships no menu bar icon.
+       ...(packagesWindows ? [{ from: fileURLToPath(new URL('../resources/tray-windows.ico', import.meta.url)), to: 'tray.ico' }] : []),
+     ],
+@@ -179,7 +191,13 @@ export function createElectronBuilderConfig(
+       writeUpdateInfo: false,
+     },
+     beforePack: async context => {
+-      const office = await officePackageDirectories(buildPaths.dsh, { platform: resolvedPlatform, arch: resolvedArch })
++      if (packagesLinux) {
++        const { verifyDesktopRuntime } = await import('../lib/types/runtime-tree.js')
++        await verifyDesktopRuntime(buildPaths.dsh,
++          preparedRuntimeVersion ?? productVersion, { platform: resolvedPlatform, arch: resolvedArch })
++        verifyLinuxSystemRuntime(buildPaths.dsh)
++      }
++      const office = packagesLinux ? [] : await officePackageDirectories(buildPaths.dsh, { platform: resolvedPlatform, arch: resolvedArch })
+       const patterns = office.map(directory => `**/${relative(buildPaths.dsh, directory).split(sep).join('/')}/**/*`)
+       const existing = context.packager.config.asarUnpack ?? []
+       context.packager.config.asarUnpack = [...(typeof existing === 'string' ? [existing] : existing), ...patterns]
+@@ -195,6 +213,12 @@ export function createElectronBuilderConfig(
+     afterPack: async context => {
+       const { verifyDesktopRuntime } = await import('../lib/types/runtime-tree.js')
+       const resourcesDir = context.packager.getResourcesDir(context.appOutDir)
++      if (packagesLinux) {
++        const packagedRuntime = join(resourcesDir, 'dsh')
++        await verifyDesktopRuntime(packagedRuntime,
++          preparedRuntimeVersion ?? productVersion, { platform: resolvedPlatform, arch: resolvedArch })
++        verifyLinuxSystemRuntime(packagedRuntime)
++      }
+       if (resolvedPlatform === 'darwin' && update !== undefined) {
+         await writeMacOSAppUpdateConfig(resourcesDir, resolveMacOSAppUpdateFeed(context.packager.config.publish),
+           context.packager.appInfo.updaterCacheDirName)
+@@ -246,9 +270,12 @@ export function createElectronBuilderConfig(
+       target: ['nsis'],
+     },
+     linux: {
++      ...(packagesLinux ? { executableName: 'deepseek-harness',
++        icon: fileURLToPath(new URL('../resources/icon.png', import.meta.url)), maintainer: 'Local build <local@localhost>' } : {}),
+       category: 'Development',
+       target: ['AppImage'],
+     },
++    ...(packagesLinux ? { rpm: { packageName: 'deepseek-harness' } } : {}),
+     nsis: {
+       installerSidebar: join(buildPaths.root, 'installer-ui', 'uninstaller-sidebar.bmp'),
+       uninstallerSidebar: join(buildPaths.root, 'installer-ui', 'uninstaller-sidebar.bmp'),
+diff --git a/apps/desktop/scripts/linux-runtime.d.mts b/apps/desktop/scripts/linux-runtime.d.mts
+new file mode 100644
+index 0000000..9c3fdc7
+--- /dev/null
++++ b/apps/desktop/scripts/linux-runtime.d.mts
+@@ -0,0 +1,9 @@
++/** Package carrying the x64 Landlock launcher and stable Node-API flock addons. */
++export const LINUX_SYSTEM_PACKAGE: '@deepseek-ai/node-addon-system-linux-x64'
++
++/**
++ * Require complete ELF payloads in a physical production package directory.
++ * @param runtime Prepared or packaged physical dsh tree.
++ * @returns Nothing; rejects links, missing payloads, wrong architectures and non-executable launchers.
++ */
++export function verifyLinuxSystemRuntime(runtime: string): void
+diff --git a/apps/desktop/scripts/linux-runtime.mjs b/apps/desktop/scripts/linux-runtime.mjs
+new file mode 100644
+index 0000000..3c7f11f
+--- /dev/null
++++ b/apps/desktop/scripts/linux-runtime.mjs
+@@ -0,0 +1,22 @@
++/** Validate the Linux system package before sealing and after extracting application resources. */
++import { lstatSync } from 'node:fs'
++import { join } from 'node:path'
++import { verifyPlatformBinaries } from '../../../native/system/scripts/repo.mjs'
++
++/** Package carrying the x64 Landlock launcher and stable Node-API flock addons. */
++export const LINUX_SYSTEM_PACKAGE = '@deepseek-ai/node-addon-system-linux-x64'
++
++/**
++ * Require real, complete ELF payloads rather than workspace links or missing optional dependencies.
++ * @param {string} runtime Root of the prepared or packaged physical dsh tree.
++ * @returns {void} Rejects missing files, links, wrong architectures and non-executable launchers.
++ */
++export function verifyLinuxSystemRuntime(runtime) {
++  const directory = join(runtime, 'node_modules', LINUX_SYSTEM_PACKAGE)
++  if (!lstatSync(directory).isDirectory()) throw new Error('desktop Linux runtime: system package must be a physical directory')
++  const verified = verifyPlatformBinaries(directory)
++  if (verified.name !== LINUX_SYSTEM_PACKAGE) throw new Error('desktop Linux runtime: unexpected system package')
++  for (const file of ['bin/landlock-run', 'bin/glibc/system.node']) {
++    if (!lstatSync(join(directory, file)).isFile()) throw new Error(`desktop Linux runtime: missing physical ${file}`)
++  }
++}
+diff --git a/apps/desktop/scripts/package-linux.ts b/apps/desktop/scripts/package-linux.ts
+new file mode 100644
+index 0000000..049bbf3
+--- /dev/null
++++ b/apps/desktop/scripts/package-linux.ts
+@@ -0,0 +1,130 @@
++/** Build unsigned Linux packages without official publication, update feeds or signing settings. */
++import { execFile } from 'node:child_process'
++import { cpSync, mkdirSync, readFileSync, rmSync } from 'node:fs'
++import { join, resolve } from 'node:path'
++import { parseArgs, promisify } from 'node:util'
++import { pnpmCommand } from '../../../scripts/release/process.ts'
++import { desktopTargetBuildPaths } from './desktop-build-paths.mjs'
++import { desktopBuildCommitEnvironment, readDesktopBuildCommit } from './desktop-build-commit.mjs'
++import { resolveDesktopAppId } from './desktop-release-environment.mjs'
++import { createPackagingRun } from './packaging-run.mjs'
++import { packagingErrorDetails } from './packaging-step.mjs'
++
++const APP_ROOT = resolve(import.meta.dirname, '..')
++const REPOSITORY_ROOT = resolve(APP_ROOT, '../..')
++const LOCAL_RELEASE_SETTINGS = [
++  /^DSH_DESKTOP_(?:APP_ID|LINUX_APP_ID|BUILD_VERSION|PACKAGING_RUN_DIR)$/iu,
++  /^DSH_DESKTOP_(?:AUTO_UPDATE_|MANDATORY_UPDATE_|UPDATE_|MACOS_|WINDOWS_)/iu,
++  /^(?:DSH_PACKAGING_|DOWNLOAD_(?:TEST|PROD)_|APPLE_|(?:WIN_)?CSC_)/iu,
++]
++
++/** Local artifacts built from the same verified Linux application directory. */
++export type LinuxPackageFormat = 'dir' | 'AppImage' | 'rpm'
++
++/** Validated options for one native Linux x64 packaging run. */
++export interface LinuxPackageInvocation {
++  readonly format: LinuxPackageFormat
++  /** Reuse the existing official-profile build; release packing still verifies its build record. */
++  readonly skipBuild: boolean
++}
++
++/**
++ * Parse the local entry point, rejecting foreign build hosts and all publication/signing flags.
++ * @param argv Arguments after the script name.
++ * @param platform Build-host operating system.
++ * @param arch Build-host architecture.
++ * @returns Native-target local packaging options; directory output is the default.
++ */
++export function parseLinuxPackageInvocation(
++  argv: readonly string[], platform: NodeJS.Platform = process.platform, arch: string = process.arch,
++): LinuxPackageInvocation {
++  if (platform !== 'linux' || arch !== 'x64') throw new Error('desktop Linux package: requires a Linux x64 build host')
++  const { values } = parseArgs({ args: argv.filter(argument => argument !== '--'), allowPositionals: false,
++    options: { format: { type: 'string', default: 'dir' }, 'skip-build': { type: 'boolean', default: false } } })
++  const format = values.format
++  if (format !== 'dir' && format !== 'AppImage' && format !== 'rpm') throw new Error('desktop Linux package: format must be dir, AppImage or rpm')
++  return { format, skipBuild: values['skip-build'] }
++}
++
++/**
++ * Select local identity and unsigned mode without inheriting official release policy or credentials.
++ * @param environment Parent build environment; temporary directories and tool caches are retained.
++ * @returns Isolated Linux environment; DSH_DESKTOP_LINUX_APP_ID may override the local app identifier.
++ */
++export function linuxLocalPackageEnvironment(environment: NodeJS.ProcessEnv = process.env): NodeJS.ProcessEnv {
++  const selected = {
++    ...Object.fromEntries(Object.entries(environment).filter(([name]) => !LOCAL_RELEASE_SETTINGS.some(rule => rule.test(name)))),
++    DSH_DESKTOP_APP_ID: environment.DSH_DESKTOP_LINUX_APP_ID ?? 'local.deepseek.harness',
++    DSH_DESKTOP_UNSIGNED: '1',
++    DSH_DESKTOP_TARGET_PLATFORM: 'linux',
++    DSH_DESKTOP_TARGET_ARCH: 'x64',
++    CSC_IDENTITY_AUTO_DISCOVERY: 'false',
++  }
++  resolveDesktopAppId(selected)
++  return selected
++}
++
++/**
++ * Build and verify a local Linux application before optionally wrapping it in AppImage or RPM.
++ * @param invocation Validated native Linux packaging options.
++ * @param environment Parent environment supplying contained temporary/cache paths and networking.
++ * @returns The directory containing unsigned local artifacts; no package is installed or published.
++ */
++export async function packageLinux(
++  invocation: LinuxPackageInvocation, environment: NodeJS.ProcessEnv = process.env,
++): Promise<string> {
++  // Exported callers receive the same native-host check as the CLI before any writes or downloads.
++  parseLinuxPackageInvocation([])
++  const selected = linuxLocalPackageEnvironment(environment)
++  if (invocation.format === 'rpm') await promisify(execFile)('rpmbuild', ['--version'], { env: selected })
++  const paths = desktopTargetBuildPaths('linux-x64')
++  const product = JSON.parse(readFileSync(join(APP_ROOT, 'package.json'), 'utf8')) as { version: string }
++  Object.assign(selected, desktopBuildCommitEnvironment(readDesktopBuildCommit(REPOSITORY_ROOT)))
++  const secrets = Object.entries(environment).filter(([name]) => /KEY|SECRET|TOKEN|PASSWORD/iu.test(name)).map(([, value]) => value ?? '')
++  const run = createPackagingRun(join(APP_ROOT, '.desktop-build', 'packaging-runs'), {
++    target: 'linux-x64', format: invocation.format, unsigned: true, version: product.version,
++  }, { secrets })
++  selected.DSH_DESKTOP_PACKAGING_RUN_DIR = run.directory
++  const [command, ...prefix] = pnpmCommand()
++  const execute = (stage: string, args: readonly string[], cwd = APP_ROOT) =>
++    run.run(stage, command, [...prefix, ...args], { cwd, env: selected })
++  const builder = (format?: Exclude<LinuxPackageFormat, 'dir'>) => [
++    'exec', 'electron-builder', '--config', 'electron-builder.config.mjs', '--linux', ...format === undefined ? [] : [format],
++    '--x64', '--publish', 'never',
++  ]
++  let success = false
++  try {
++    if (!invocation.skipBuild) await execute('build', ['run', 'build:official'], REPOSITORY_ROOT)
++    await execute('pack:dsh', ['run', 'release:pack', '--family', 'dsh', '--out', paths.packedDsh], REPOSITORY_ROOT)
++    await execute('pack:host', ['--dir', 'apps/desktop-host', 'pack', '--pack-destination', paths.packedDsh], REPOSITORY_ROOT)
++    await execute('pack:vendor', ['run', 'release:pack', '--family', 'vendor', '--out', paths.packedVendor], REPOSITORY_ROOT)
++    rmSync(paths.packedLandlock, { recursive: true, force: true })
++    mkdirSync(paths.packedLandlock, { recursive: true })
++    await execute('build:system-entry', ['--dir', 'native/system', 'run', 'build:ts'], REPOSITORY_ROOT)
++    await execute('pack:system-entry', ['--dir', 'native/system/packages/entry', 'pack', '--pack-destination', paths.packedLandlock], REPOSITORY_ROOT)
++    await execute('prepare:runtime', ['run', 'prepare:runtime'])
++    await execute('prepare:packages', ['run', 'prepare:packages'])
++    await execute('prepare:dsh', ['run', 'prepare:dsh'])
++    await execute('package:dir', [...builder(), '--dir'])
++    await execute('verify:application', ['exec', 'tsx', 'scripts/smoke-packaged-runtime.ts', '--unsigned'])
++    if (invocation.format !== 'dir') {
++      // RPM's target writes AppArmor metadata into its input even with --prepackaged.
++      const staging = join(run.directory, 'prepackaged')
++      try {
++        cpSync(join(paths.unsignedArtifacts, 'linux-unpacked'), staging, { recursive: true, preserveTimestamps: true, verbatimSymlinks: true })
++        await execute('package:artifact', [...builder(invocation.format), '--prepackaged', staging])
++      } finally { rmSync(staging, { recursive: true, force: true }) }
++    }
++    success = true
++    return paths.unsignedArtifacts
++  } catch (error) {
++    throw new Error(`desktop Linux package failed; see ${run.directory}\n${packagingErrorDetails(error, secrets)}`)
++  } finally {
++    run.finish(success)
++  }
++}
++
++if (process.argv[1] !== undefined && resolve(process.argv[1]) === import.meta.filename) {
++  const invocation = parseLinuxPackageInvocation(process.argv.slice(2))
++  console.log(`desktop Linux package: ${await packageLinux(invocation)}`)
++}
+diff --git a/apps/desktop/scripts/prepare-cli.ts b/apps/desktop/scripts/prepare-cli.ts
+index d2b9e14..5e78ecf 100644
+--- a/apps/desktop/scripts/prepare-cli.ts
++++ b/apps/desktop/scripts/prepare-cli.ts
+@@ -8,10 +8,10 @@ import { join } from 'node:path'
+  * @param destination - Physical runtime/cli directory prepared for the application.
+  * @param platform - Target Desktop operating system.
+  */
+-export function prepareDesktopCli(destination: string, platform: 'darwin' | 'win32'): void {
++export function prepareDesktopCli(destination: string, platform: 'darwin' | 'win32' | 'linux'): void {
+   const name = platform === 'win32' ? 'dsh.cmd' : 'dsh'
+   const command = join(destination, 'bin', name)
+   mkdirSync(join(destination, 'bin'), { recursive: true })
+-  copyFileSync(join(import.meta.dirname, '..', 'cli', name), command)
+-  if (platform === 'darwin') chmodSync(command, 0o755)
++  copyFileSync(join(import.meta.dirname, '..', 'cli', platform === 'linux' ? 'dsh-linux' : name), command)
++  if (platform !== 'win32') chmodSync(command, 0o755)
+ }
+diff --git a/apps/desktop/scripts/prepare-dsh.ts b/apps/desktop/scripts/prepare-dsh.ts
+index 9de39d3..c678946 100644
+--- a/apps/desktop/scripts/prepare-dsh.ts
++++ b/apps/desktop/scripts/prepare-dsh.ts
+@@ -34,16 +34,21 @@ import {
+ import { desktopTargetPlatform, resolveDesktopBuildTarget, resolveDesktopTargetBuildPaths } from './desktop-build-paths.mjs'
+ import { desktopRuntimeFileExclusion } from './runtime-file-policy.ts'
+ import { selectOfficeEngine } from '../../../scripts/libreoffice-packages.mjs'
++import { verifyLinuxSystemRuntime } from './linux-runtime.mjs'
++import { resolveDesktopRuntimeStoreDirectory } from './runtime-store-directory.mjs'
+ 
+ const APP_ROOT = resolve(import.meta.dirname, '..')
+ const BUILD_PATHS = resolveDesktopTargetBuildPaths()
+ const DSH_OUTPUT_ROOT = BUILD_PATHS.dsh
++const configuredStore = resolveDesktopRuntimeStoreDirectory(process.env)
+ const BUILD_ROOT = mkdtempSync(join(tmpdir(), 'dsh-desktop-runtime-'))
+-const STORE_ROOT = join(BUILD_ROOT, 'store')
++const STORE_ROOT = configuredStore ?? join(BUILD_ROOT, 'store')
+ const RUNTIME_ROOT = BUILD_PATHS.runtime
+ const PNPM_BUILD_STATE = BUILD_PATHS.dshPnpm
+ const PACKAGE_SET_ROOT = BUILD_PATHS.packageSet
+-const NODE = join(BUILD_PATHS.electron, process.platform === 'win32' ? 'electron.exe' : 'Electron.app/Contents/MacOS/Electron')
++const NODE = process.platform === 'linux'
++  ? join(RUNTIME_ROOT, 'primary-runtime', 'dependencies', 'node', 'bin', 'node')
++  : join(BUILD_PATHS.electron, process.platform === 'win32' ? 'electron.exe' : 'Electron.app/Contents/MacOS/Electron')
+ const PNPM = join(RUNTIME_ROOT, 'primary-runtime', 'dependencies', 'pnpm', 'bin', 'pnpm.mjs')
+ 
+ function manifestVersion(path: string, subject: string): string {
+@@ -95,9 +100,11 @@ function runPnpm(args: readonly string[]): Promise<void> {
+         NPM_CONFIG_REGISTRY: registry,
+         NPM_CONFIG_STORE_DIR: STORE_ROOT,
+         NPM_CONFIG_USERCONFIG: userConfig,
++        npm_config_cache: join(PNPM_BUILD_STATE, 'npm'),
++        npm_config_devdir: join(PNPM_BUILD_STATE, 'node-gyp'),
+         ...desktopNodeEnvironment(NODE, join(RUNTIME_ROOT, 'bin'), {}),
+         PATH: `${join(RUNTIME_ROOT, 'bin')}${delimiter}${process.env.PATH ?? ''}`,
+-        XDG_CACHE_HOME: join(PNPM_BUILD_STATE, 'cache'),
++        XDG_CACHE_HOME: configuredStore === undefined ? join(PNPM_BUILD_STATE, 'cache') : join(STORE_ROOT, 'cache'),
+         XDG_CONFIG_HOME: config,
+         XDG_STATE_HOME: join(PNPM_BUILD_STATE, 'state'),
+       },
+@@ -145,6 +152,7 @@ async function main(): Promise<void> {
+         filter: source => desktopRuntimeFileExclusion(relative(modules, source), target, officeEngine) === undefined,
+       })
+     })
++    if (target.platform === 'linux') verifyLinuxSystemRuntime(DSH_OUTPUT_ROOT)
+     writeFileSync(join(DSH_OUTPUT_ROOT, 'package.json'), `${JSON.stringify({
+       name: '@deepseek-ai/dsh-desktop-runtime', private: true, version: release.version, type: 'module',
+       dependencies: Object.fromEntries(packageSet.packages.map(entry => [entry.name, entry.version])),
+diff --git a/apps/desktop/scripts/prepare-runtime.ts b/apps/desktop/scripts/prepare-runtime.ts
+index ba92fef..be7315a 100644
+--- a/apps/desktop/scripts/prepare-runtime.ts
++++ b/apps/desktop/scripts/prepare-runtime.ts
+@@ -19,15 +19,18 @@ const RUNTIME_ROOT = BUILD_PATHS.runtime
+ 
+ type DesktopTarget = ReturnType<typeof desktopTargetPlatform>
+ 
+-/** Extract the target Electron distribution and return its embedded Node version. */
+-async function prepareElectron({ platform, arch }: DesktopTarget): Promise<string> {
++/** Extract Electron; macOS and Windows also use its embedded Node for Host execution. */
++async function prepareElectron({ platform, arch }: DesktopTarget): Promise<string | undefined> {
+   const require = createRequire(import.meta.url)
+   const { version } = require('electron/package.json') as { version: string }
+   const archive = await packagingStep(process.env.DSH_DESKTOP_PACKAGING_RUN_DIR, 'download:electron',
+     () => downloadArtifact({ version, platform, arch, artifactName: 'electron', cacheRoot: BUILD_PATHS.downloads }))
+   rmSync(BUILD_PATHS.electron, { recursive: true, force: true })
+   await packagingStep(process.env.DSH_DESKTOP_PACKAGING_RUN_DIR, 'extract:electron', () => extractZip(archive, { dir: BUILD_PATHS.electron }))
+-  const executable = join(BUILD_PATHS.electron, platform === 'win32' ? 'electron.exe' : 'Electron.app/Contents/MacOS/Electron')
++  const executable = join(BUILD_PATHS.electron, platform === 'win32' ? 'electron.exe'
++    : platform === 'linux' ? 'electron' : 'Electron.app/Contents/MacOS/Electron')
++  if (platform !== 'win32') chmodSync(executable, 0o755)
++  if (platform === 'linux') return undefined
+   return execFileSync(executable, ['-p', 'process.versions.node'], {
+     encoding: 'utf8', env: { ...process.env, ELECTRON_RUN_AS_NODE: '1' },
+   }).trim()
+@@ -53,11 +56,14 @@ async function main(): Promise<void> {
+   const target = desktopTargetPlatform(resolveDesktopBuildTarget())
+   rmSync(RUNTIME_ROOT, { recursive: true, force: true })
+   mkdirSync(RUNTIME_ROOT, { recursive: true })
+-  const nodeVersion = await prepareElectron(target)
++  const electronNodeVersion = await prepareElectron(target)
+   await packagingStep(process.env.DSH_DESKTOP_PACKAGING_RUN_DIR, 'prepare:primary-runtime',
+     () => preparePrimaryRuntime({ deferSmoke: values['defer-primary-runtime-smoke'] }))
+-  const { pnpm } = await readPrimaryRuntime(join(RUNTIME_ROOT, 'primary-runtime'))
++  const primary = await readPrimaryRuntime(join(RUNTIME_ROOT, 'primary-runtime'))
++  const { pnpm } = primary
+   if (pnpm === undefined) throw new Error('desktop runtime: primary-runtime manifest has no pnpm version')
++  const nodeVersion = target.platform === 'linux' ? primary.node : electronNodeVersion
++  if (nodeVersion === undefined) throw new Error('desktop runtime: prepared Host has no Node version')
+   await packagingStep(process.env.DSH_DESKTOP_PACKAGING_RUN_DIR, 'prepare:cli', async () => { prepareCli(target) })
+   writeFileSync(join(RUNTIME_ROOT, 'versions.json'), `${JSON.stringify({
+     schemaVersion: 1,
+diff --git a/apps/desktop/scripts/retain-desktop-ci.ts b/apps/desktop/scripts/retain-desktop-ci.ts
+index 69bade9..62fe385 100644
+--- a/apps/desktop/scripts/retain-desktop-ci.ts
++++ b/apps/desktop/scripts/retain-desktop-ci.ts
+@@ -34,6 +34,7 @@ export function desktopReleasesRoot(env: NodeJS.ProcessEnv): string {
+  */
+ export async function retainDesktopCi(env: NodeJS.ProcessEnv, appRoot = resolve(import.meta.dirname, '..')): Promise<string> {
+   const target = resolveDesktopBuildTarget(env)
++  if (target === 'linux-x64') throw new Error('desktop retention: Linux development targets have no release artifacts')
+   const windows = target === 'win-x64'
+   const platform = windows ? 'win32' : 'darwin'
+   const settings = loadDesktopPackageEnvironment(platform, env, appRoot, { unsigned: true })
+diff --git a/apps/desktop/scripts/runtime-store-directory.d.mts b/apps/desktop/scripts/runtime-store-directory.d.mts
+new file mode 100644
+index 0000000..0d11a1e
+--- /dev/null
++++ b/apps/desktop/scripts/runtime-store-directory.d.mts
+@@ -0,0 +1,7 @@
++/** Explicit package-store reuse for Desktop production dependency preparation. */
++/**
++ * Select an absolute pnpm store only when packaging explicitly configures one.
++ * @param environment Packaging environment; no filesystem changes are performed.
++ * @returns Normalized configured directory, or undefined to retain temporary storage.
++ */
++export function resolveDesktopRuntimeStoreDirectory(environment: NodeJS.ProcessEnv): string | undefined
+diff --git a/apps/desktop/scripts/runtime-store-directory.mjs b/apps/desktop/scripts/runtime-store-directory.mjs
+new file mode 100644
+index 0000000..710b0ed
+--- /dev/null
++++ b/apps/desktop/scripts/runtime-store-directory.mjs
+@@ -0,0 +1,16 @@
++/** Read explicit package-store reuse without changing the default temporary production store. */
++import { isAbsolute, resolve } from 'node:path'
++
++/**
++ * Select an existing pnpm cache location only when packaging explicitly configures one.
++ * @param {NodeJS.ProcessEnv} environment Packaging environment; no filesystem changes are performed.
++ * @returns {string | undefined} Normalized absolute store, or undefined to retain temporary storage.
++ */
++export function resolveDesktopRuntimeStoreDirectory(environment) {
++  const selected = environment.DSH_DESKTOP_RUNTIME_STORE_DIR
++  if (selected === undefined) return undefined
++  if (!selected || selected.includes('\0') || !isAbsolute(selected)) {
++    throw new Error('DSH_DESKTOP_RUNTIME_STORE_DIR must be a nonempty absolute directory')
++  }
++  return resolve(selected)
++}
+diff --git a/apps/desktop/scripts/smoke-packaged-runtime.ts b/apps/desktop/scripts/smoke-packaged-runtime.ts
+index 6c3c12c..3370427 100644
+--- a/apps/desktop/scripts/smoke-packaged-runtime.ts
++++ b/apps/desktop/scripts/smoke-packaged-runtime.ts
+@@ -5,18 +5,25 @@ import { desktopArtifactOutput, resolveDesktopBuildTarget, resolveDesktopTargetB
+ import { readDesktopRuntime, verifyDesktopRuntime } from '../src/runtime-tree.ts'
+ import { verifyWindowsCode } from './windows-runtime-signature.mjs'
+ import { smokePreparedRuntime } from './smoke-prepared-runtime.ts'
+-import { resolveDesktopPackageTarget } from './package-target.ts'
++import { desktopTargetPlatform } from './desktop-build-paths.mjs'
++import { verifyLinuxSystemRuntime } from './linux-runtime.mjs'
+ 
+ const paths = resolveDesktopTargetBuildPaths()
+ const { values } = parseArgs({ options: { unsigned: { type: 'boolean', default: false }, 'skip-notarization': { type: 'boolean', default: false } }, allowPositionals: false })
+ const target = resolveDesktopBuildTarget()
+ const windows = target === 'win-x64'
++const linux = target === 'linux-x64'
+ const artifacts = desktopArtifactOutput(paths, { unsigned: values.unsigned, skipNotarization: values['skip-notarization'] }).directory
+ const application = windows ? join(artifacts, 'win-unpacked')
+-  : join(artifacts, target === 'mac-arm64' ? 'mac-arm64' : 'mac', 'DeepSeek Harness.app', 'Contents')
+-const resources = join(application, windows ? 'resources' : 'Resources')
+-const executable = windows ? join(application, 'DeepSeek Harness.exe') : join(application, 'MacOS', 'DeepSeek Harness')
+-const descriptor = await verifyDesktopRuntime(paths.dsh, readDesktopRuntime(paths.dsh).release.version,
+-  resolveDesktopPackageTarget(target))
++  : linux ? join(artifacts, 'linux-unpacked')
++    : join(artifacts, target === 'mac-arm64' ? 'mac-arm64' : 'mac', 'DeepSeek Harness.app', 'Contents')
++const resources = join(application, windows || linux ? 'resources' : 'Resources')
++const executable = windows ? join(application, 'DeepSeek Harness.exe')
++  : linux ? join(resources, 'runtime', 'primary-runtime', 'dependencies', 'node', 'bin', 'node')
++    : join(application, 'MacOS', 'DeepSeek Harness')
++const runtime = linux ? join(resources, 'dsh') : join(resources, 'app.asar', 'dsh')
++const descriptor = await verifyDesktopRuntime(linux ? runtime : paths.dsh, readDesktopRuntime(paths.dsh).release.version,
++  desktopTargetPlatform(target))
++if (linux) verifyLinuxSystemRuntime(runtime)
+ if (windows && !values.unsigned) await verifyWindowsCode(application)
+-await smokePreparedRuntime(join(resources, 'app.asar', 'dsh'), executable, join(resources, 'runtime'), descriptor)
++await smokePreparedRuntime(runtime, executable, join(resources, 'runtime'), descriptor)
+diff --git a/apps/desktop/scripts/smoke-prepared-runtime.ts b/apps/desktop/scripts/smoke-prepared-runtime.ts
+index e6afd57..4c034f1 100644
+--- a/apps/desktop/scripts/smoke-prepared-runtime.ts
++++ b/apps/desktop/scripts/smoke-prepared-runtime.ts
+@@ -14,7 +14,7 @@ import { verifyRuntimeArchive } from './verify-runtime-archive.ts'
+ /**
+  * Exercise real runtime files and Host composition, including an ASAR root when packaged.
+  * @param root Prepared or archived dsh directory.
+- * @param node Target Electron executable.
++ * @param node Target Host executable: standalone Node on Linux, Electron on macOS and Windows.
+  * @param resourcesRuntime External runtime directory beside the archive.
+  * @param descriptor Runtime descriptor already verified against the selected target, which may differ from the build host.
+  * @returns Resolves after archive integrity, payload checks, Host startup, Office conversion and teardown.
+diff --git a/apps/desktop/scripts/smoke-runtime.ts b/apps/desktop/scripts/smoke-runtime.ts
+index bbc2d3e..db2c87d 100644
+--- a/apps/desktop/scripts/smoke-runtime.ts
++++ b/apps/desktop/scripts/smoke-runtime.ts
+@@ -15,7 +15,7 @@ import type { DesktopRuntimeDescriptor } from '../src/runtime-tree.ts'
+ /**
+  * Check CLI package operations, Host startup, its frontend, external plugins and real Office-to-PDF conversion.
+  * @param root - Materialized dsh resources.
+- * @param node - Prepared target Electron executable.
++ * @param node - Prepared Host executable: standalone Node on Linux, Electron on macOS and Windows.
+  * @param runtime - Verified resource descriptor.
+  * @param environment - Credential-scrubbed build environment and private native cache.
+  * @param resourcesRuntime - Bundled interpreters outside the application archive.
+diff --git a/apps/desktop/src/host-process.ts b/apps/desktop/src/host-process.ts
+index 948a88e..1e872cf 100644
+--- a/apps/desktop/src/host-process.ts
++++ b/apps/desktop/src/host-process.ts
+@@ -1,4 +1,4 @@
+-/** Electron Node-mode child lifecycle for the shared Web application. */
++/** Node child lifecycle for the shared Web application. */
+ 
+ import { spawn, type ChildProcess } from 'node:child_process'
+ import { join } from 'node:path'
+@@ -134,7 +134,7 @@ export class DesktopHostFatalError extends Error {
+   get diagnostic(): string | undefined { return this.#diagnostic }
+ }
+ 
+-/** One Web backend running under the Electron executable in Node mode. */
++/** One Web backend running under Node or Electron Node mode. */
+ export class DesktopHostProcess {
+   private child: ChildProcess | undefined
+   private readyResolve!: (ready: DesktopHostReady) => void
+@@ -155,7 +155,7 @@ export class DesktopHostProcess {
+   }>()
+ 
+   /**
+-   * @param node - Absolute Electron executable in Node mode.
++   * @param node - Absolute Node executable or Electron executable in Node mode.
+    * @param runtimeDir - Immutable packages carried by the current application.
+    * @param projectDir - Desktop plugin profile and child working directory.
+    * @param inspectPort - Optional loopback inspector port for workspace development.
+diff --git a/apps/desktop/src/login-shell-environment.ts b/apps/desktop/src/login-shell-environment.ts
+index fc7c966..1e02b33 100644
+--- a/apps/desktop/src/login-shell-environment.ts
++++ b/apps/desktop/src/login-shell-environment.ts
+@@ -1,4 +1,4 @@
+-/** Login-shell environment for POSIX Desktop launches that inherit only the session manager's environment. */
++/** Host environment selection for Desktop launches, with optional POSIX login-shell discovery. */
+ 
+ import { spawn, type ChildProcessByStdio } from 'node:child_process'
+ import { homedir, userInfo } from 'node:os'
+@@ -16,8 +16,10 @@ const SHELL_SESSION_KEYS = new Set(['PWD', 'OLDPWD', 'SHLVL', '_', ...Object.key
+ /** Desktop resolves paths such as `DSH_HOME` before the read, so the Host keeps the same inherited values. */
+ const LAUNCHER_OWNED_PREFIXES = ['DSH_', 'ELECTRON_'] as const
+ 
+-/** Validated login-shell read settings. */
++/** Validated Host environment selection and login-shell read settings. */
+ export interface DesktopLoginShellConfig {
++  /** `inherit` keeps the launcher's environment without shell discovery; `login-shell` probes POSIX shells. */
++  readonly mode: 'inherit' | 'login-shell'
+   /** Deadline for each candidate shell, in milliseconds. */
+   readonly timeoutMs: number
+ }
+@@ -50,12 +52,16 @@ export interface DesktopLoginShellReadOptions {
+ }
+ 
+ /**
+- * Resolve login-shell read settings.
++ * Resolve Host environment selection and login-shell read settings.
+  * @param env - Desktop process environment.
+- * @returns Validated per-candidate deadline; `DSH_DESKTOP_LOGIN_SHELL_TIMEOUT_MS` defaults to 10000.
++ * @returns Validated mode and per-candidate deadline; defaults to `login-shell` and 10000 milliseconds.
+  */
+ export function resolveDesktopLoginShellConfig(env: NodeJS.ProcessEnv): DesktopLoginShellConfig {
+-  return { timeoutMs: resolveDurationMs(env, 'DSH_DESKTOP_LOGIN_SHELL_TIMEOUT_MS', 10_000) }
++  const mode = env.DSH_DESKTOP_HOST_ENVIRONMENT_MODE ?? 'login-shell'
++  if (mode !== 'inherit' && mode !== 'login-shell') {
++    throw new Error('DSH_DESKTOP_HOST_ENVIRONMENT_MODE must be inherit or login-shell')
++  }
++  return { mode, timeoutMs: resolveDurationMs(env, 'DSH_DESKTOP_LOGIN_SHELL_TIMEOUT_MS', 10_000) }
+ }
+ 
+ /**
+@@ -161,8 +167,8 @@ function readShell(
+ }
+ 
+ /**
+- * Read the user's login-shell environment once; Windows GUI launches already inherit the registry
+- * environment, so `win32` returns `base` unchanged. Never rejects: each failing candidate is
++ * Select the Host environment once. `inherit` and Windows return `base` unchanged without
++ * discovering or running a shell. POSIX `login-shell` probes the user's shells. Never rejects: each failing candidate is
+  * recorded and the next one tried, and `base` is returned when all fail or the read is aborted.
+  * @param base - Environment Desktop inherited.
+  * @param config - Validated read settings.
+@@ -172,8 +178,9 @@ function readShell(
+ export async function readDesktopLoginShellEnvironment(
+   base: NodeJS.ProcessEnv, config: DesktopLoginShellConfig, options: DesktopLoginShellReadOptions = {},
+ ): Promise<DesktopLoginShellResult> {
+-  const { platform = process.platform, shells = loginShellCandidates(), signal } = options
+-  if (platform === 'win32') return { environment: base, failures: [] }
++  const { platform = process.platform, signal } = options
++  if (config.mode === 'inherit' || platform === 'win32') return { environment: base, failures: [] }
++  const shells = options.shells ?? loginShellCandidates()
+   const failures: DesktopLoginShellFailure[] = []
+   for (const shell of shells) {
+     const result = await readShell(shell, base, homedir(), config.timeoutMs, signal)
+diff --git a/apps/desktop/src/main.ts b/apps/desktop/src/main.ts
+index 2afdfd7..3284781 100644
+--- a/apps/desktop/src/main.ts
++++ b/apps/desktop/src/main.ts
+@@ -34,6 +34,7 @@ import { readDeviceInfo } from './device-info.ts'
+ import { desktopUpdateReadyConfirmation, formatDesktopMessage, resolveDesktopLocale, resolveDesktopStartupLocale } from './locale.ts'
+ import { claimDesktopSingleInstance } from './single-instance.ts'
+ import { desktopUpdateChannel } from './update-channel.ts'
++import { desktopProtocolRegistrationEnabled } from './protocol-registration.ts'
+ import { DesktopUpdateCoordinator } from './update-coordinator.ts'
+ import { DesktopCommandManager } from './command-management.ts'
+ import { serveWebDocument, authenticateWebHost, forwardWebRequest } from './web-document.ts'
+@@ -150,15 +151,20 @@ interface RuntimeResources {
+   readonly dsh: string
+ }
+ 
++/** Resolve Host resources; installed Linux Hosts use standalone Node to isolate libvips from Electron's GLib. */
+ function runtimeResources(): RuntimeResources {
+   const development = !app.isPackaged
+-  const node = process.execPath
++  const standaloneLinux = !development && process.platform === 'linux'
++  const node = standaloneLinux
++    ? join(process.resourcesPath, 'runtime', 'primary-runtime', 'dependencies', 'node', 'bin', 'node')
++    : process.execPath
+   const nodeBin = development ? join(app.getAppPath(), 'scripts', 'node-bin') : join(process.resourcesPath, 'runtime', 'bin')
+   const pnpm = (development ? process.env.DSH_DESKTOP_PNPM_ENTRY : undefined)
+     ?? (development ? join(app.getAppPath(), 'node_modules', 'pnpm', 'bin', 'pnpm.mjs')
+       : join(process.resourcesPath, 'runtime', 'primary-runtime', 'dependencies', 'pnpm', 'bin', 'pnpm.mjs'))
+   const dsh = (development ? process.env.DSH_DESKTOP_DSH_DIR : undefined)
+-    ?? (development ? join(app.getAppPath(), '.desktop-build', 'development', 'project') : join(app.getAppPath(), 'dsh'))
++    ?? (development ? join(app.getAppPath(), '.desktop-build', 'development', 'project')
++      : standaloneLinux ? join(process.resourcesPath, 'dsh') : join(app.getAppPath(), 'dsh'))
+   return { node, nodeBin, pnpm, dsh }
+ }
+ 
+@@ -441,7 +447,7 @@ async function main(): Promise<void> {
+     return next.promise
+   }
+   const platformView = new DesktopPlatformView(join(app.getAppPath(), 'lib', 'preload-platform-account.cjs'),
+-    () => locale.id === 'zh-CN' ? 'zh_CN' : 'en_US', process.platform === 'win32' ? 'win32' : 'darwin')
++    () => locale.id === 'zh-CN' ? 'zh_CN' : 'en_US', process.platform === 'win32' || process.platform === 'darwin' ? process.platform : null)
+   const backend = new DesktopBackendController((onFailure) => {
+     const hostInspectPort = developmentHostInspectPort(development)
+     const host = new DesktopHostProcess(resources.node, resources.dsh, activeProject,
+@@ -586,6 +592,7 @@ async function main(): Promise<void> {
+ 
+   const manifest: unknown = JSON.parse(await readFile(join(app.getAppPath(), 'package.json'), 'utf8'))
+   const updateChannel = desktopUpdateChannel(manifest)
++  const registerProtocolClient = desktopProtocolRegistrationEnabled(manifest)
+   const updates = new DesktopUpdateCoordinator(
+     publishUpdate,
+     async () => {
+@@ -1075,11 +1082,13 @@ async function main(): Promise<void> {
+     browserGuests.bind(window, (guest, name) => shortcuts.attachGuest(window, guest, name))
+     shortcuts.attach(window)
+     window.on('focus', automaticCheck)
+-    // Closing hides: the page and the Host keep running, and the next show resumes the same document.
++    // Linux has no tray; closing asks to quit while retaining the window until the decision settles.
++    // macOS and Windows hide the running document so the next show resumes it.
+     window.on('close', (event) => {
+       if (quitting || shellInstallerOwnsQuit || sessionEnding) return
+       event.preventDefault()
+       if (updateDialog.isOpen) { updateDialog.focus(); return }
++      if (process.platform === 'linux') { app.quit(); return }
+       const hide = (): void => {
+         if (!quitting && !shellInstallerOwnsQuit && !sessionEnding && !window.isDestroyed()) hideMainWindow(window)
+       }
+@@ -1232,7 +1241,7 @@ async function main(): Promise<void> {
+     window.focus()
+   }
+ 
+-  if (app.isPackaged || process.env.DSH_DESKTOP_DEV_APP === '1') app.setAsDefaultProtocolClient('dsh')
++  if (registerProtocolClient && (app.isPackaged || process.env.DSH_DESKTOP_DEV_APP === '1')) app.setAsDefaultProtocolClient('dsh')
+   app.on('open-url', (event, url) => {
+     event.preventDefault()
+     if (url === 'dsh://open' || url === 'dsh://open/') focusPrimaryWindow()
+diff --git a/apps/desktop/src/node-environment.ts b/apps/desktop/src/node-environment.ts
+index 680b439..219f5e7 100644
+--- a/apps/desktop/src/node-environment.ts
++++ b/apps/desktop/src/node-environment.ts
+@@ -1,13 +1,13 @@
+-/** Electron Node-mode startup, with private shell launchers scoped to package installation. */
++/** Node startup, with private shell launchers scoped to package installation. */
+ 
+ import { delimiter } from 'node:path'
+ 
+ /**
+- * Select Electron's Node mode and the shell launcher used by package scripts.
+- * @param executable - Electron executable running the application.
++ * Select Node-compatible child startup and the shell launcher used by package scripts.
++ * @param executable - Node executable, or Electron executable requiring Node mode.
+  * @param bin - Directory containing the node shell launcher.
+  * @param environment - Caller environment preserved for plugin execution.
+- * @returns Environment for a Node-mode child process.
++ * @returns Environment for the selected Node child process.
+  */
+ export function desktopNodeEnvironment(executable: string, bin: string | undefined, environment: NodeJS.ProcessEnv): NodeJS.ProcessEnv {
+   return {
+diff --git a/apps/desktop/src/platform-view.ts b/apps/desktop/src/platform-view.ts
+index ce759c6..f60ef3d 100644
+--- a/apps/desktop/src/platform-view.ts
++++ b/apps/desktop/src/platform-view.ts
+@@ -50,10 +50,10 @@ export class DesktopPlatformView {
+   /**
+    * @param preload - bundled sandboxed Platform preload path.
+    * @param getLocale - current resolved Desktop language.
+-   * @param platform - operating system this shell runs on, reported to Platform.
++   * @param platform - supported Desktop identity, or null to use the shared web identity.
+    */
+   constructor(private readonly preload: string, private readonly getLocale: () => PlatformLocale,
+-    private readonly platform: 'darwin' | 'win32') {}
++    private readonly platform: 'darwin' | 'win32' | null) {}
+ 
+   /** @param next - private Host credentials; identity enrichment preserves an already open temporary document. */
+   setSession(next: PlatformSession | null): void {
+diff --git a/apps/desktop/src/protocol-registration.ts b/apps/desktop/src/protocol-registration.ts
+new file mode 100644
+index 0000000..7e09ae3
+--- /dev/null
++++ b/apps/desktop/src/protocol-registration.ts
+@@ -0,0 +1,18 @@
++/** Resolve operating-system protocol registration from the application manifest. */
++
++/**
++ * Read whether this application may register the dsh protocol client.
++ * @param manifest - Parsed application manifest.
++ * @returns The explicit boolean, or true when the field is absent.
++ */
++export function desktopProtocolRegistrationEnabled(manifest: unknown): boolean {
++  if (typeof manifest !== 'object' || manifest === null || Array.isArray(manifest)) {
++    throw new Error('desktop protocol: invalid application manifest')
++  }
++  if (!('dshDesktopRegisterProtocolClient' in manifest)) return true
++  const enabled = manifest.dshDesktopRegisterProtocolClient
++  if (typeof enabled !== 'boolean') {
++    throw new Error('desktop protocol: dshDesktopRegisterProtocolClient must be a boolean')
++  }
++  return enabled
++}
+diff --git a/apps/desktop/tests/cli-launcher.spec.ts b/apps/desktop/tests/cli-launcher.spec.ts
+index 67e38da..467c92b 100644
+--- a/apps/desktop/tests/cli-launcher.spec.ts
++++ b/apps/desktop/tests/cli-launcher.spec.ts
+@@ -8,7 +8,7 @@ import { dirname, join, relative } from 'node:path'
+ import { expect, it, onTestFinished } from 'vitest'
+ import { prepareDesktopCli } from '../scripts/prepare-cli.ts'
+ 
+-function fixture() {
++function fixture(platform: 'darwin' | 'win32' | 'linux' = process.platform === 'win32' ? 'win32' : 'darwin') {
+   const root = realpathSync(mkdtempSync(join(tmpdir(), 'dsh-cli-launcher-')))
+   const children: ChildProcessWithoutNullStreams[] = []
+   const exits: Promise<unknown>[] = []
+@@ -20,15 +20,16 @@ function fixture() {
+     await rm(root, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 })
+   })
+   const application = join(root, 'Application 中文 with spaces.app')
+-  const platform = process.platform === 'win32' ? 'win32' : 'darwin'
+   const resources = join(application, ...platform === 'darwin' ? ['Contents', 'Resources'] : ['resources'])
+   const cli = join(resources, 'runtime', 'cli')
+   prepareDesktopCli(cli, platform)
+-  const electron = join(application, ...platform === 'darwin' ? ['Contents', 'MacOS', 'DeepSeek Harness'] : ['DeepSeek Harness.exe'])
++  const electron = platform === 'linux' ? join(resources, 'runtime', 'primary-runtime', 'dependencies', 'node', 'bin', 'node')
++    : join(application, ...platform === 'darwin' ? ['Contents', 'MacOS', 'DeepSeek Harness'] : ['DeepSeek Harness.exe'])
+   mkdirSync(dirname(electron), { recursive: true })
+   if (platform === 'win32') copyFileSync(process.execPath, electron)
+   else symlinkSync(process.execPath, electron)
+-  const entry = join(resources, 'app.asar', 'dsh', 'node_modules', '@deepseek-ai', 'dsh-desktop-host', 'lib', 'cli.js')
++  const entry = join(resources, ...platform === 'linux' ? [] : ['app.asar'],
++    'dsh', 'node_modules', '@deepseek-ai', 'dsh-desktop-host', 'lib', 'cli.js')
+   mkdirSync(dirname(entry), { recursive: true })
+   writeFileSync(join(dirname(entry), 'package.json'), '{"type":"module"}\n')
+   writeFileSync(entry, [
+@@ -85,3 +86,13 @@ it.skipIf(process.platform === 'win32')('resolves chained command symlinks witho
+   expect(await run.closed, run.stderr()).toBe(23)
+   expect(JSON.parse(run.stdout())).toMatchObject({ args, cwd: f.root, nodeMode: '1' })
+ })
++
++it.skipIf(process.platform === 'win32')('runs the Linux CLI beside unpacked application resources', async () => {
++  const f = fixture('linux')
++  const args = ['plugin', '--profile', 'desktop', 'quote"inside', '$HOME', '中文 🚀', '']
++  const run = f.start(args)
++  const input = Buffer.from([0, 10, 255])
++  run.child.stdin.end(input)
++  expect(await run.closed, run.stderr()).toBe(23)
++  expect(JSON.parse(run.stdout())).toEqual({ args, cwd: f.root, value: 'kept', input: input.toString('hex') })
++})
+diff --git a/apps/desktop/tests/desktop-build-paths.spec.ts b/apps/desktop/tests/desktop-build-paths.spec.ts
+index ede5c5e..5ad4d38 100644
+--- a/apps/desktop/tests/desktop-build-paths.spec.ts
++++ b/apps/desktop/tests/desktop-build-paths.spec.ts
+@@ -12,6 +12,7 @@ describe('desktop build paths', () => {
+     const arm64 = desktopTargetBuildPaths('mac-arm64')
+     const x64 = desktopTargetBuildPaths('mac-x64')
+     const windows = desktopTargetBuildPaths('win-x64')
++    const linux = desktopTargetBuildPaths('linux-x64')
+     const mutableKeys = [
+       'root',
+       'artifacts',
+@@ -28,17 +29,20 @@ describe('desktop build paths', () => {
+     ] as const
+ 
+     for (const key of mutableKeys) {
+-      expect(new Set([arm64[key], x64[key], windows[key]]).size).toBe(3)
++      expect(new Set([arm64[key], x64[key], windows[key], linux[key]]).size).toBe(4)
+     }
+     expect(arm64.artifacts).toContain(join('targets', 'mac-arm64', 'artifacts'))
+     expect(x64.dsh).toContain(join('targets', 'mac-x64', 'dsh'))
+     expect(windows.runtime).toContain(join('targets', 'win-x64', 'runtime'))
++    expect(linux.runtime).toContain(join('targets', 'linux-x64', 'runtime'))
+   })
+ 
+   it('shares only the immutable upstream download cache', () => {
+     const arm64 = desktopTargetBuildPaths('mac-arm64')
+     const x64 = desktopTargetBuildPaths('mac-x64')
++    const linux = desktopTargetBuildPaths('linux-x64')
+     expect(arm64.downloads).toBe(x64.downloads)
++    expect(linux.downloads).toBe(x64.downloads)
+     expect(arm64.downloads).not.toContain(`${sep}targets${sep}`)
+   })
+ 
+@@ -49,13 +53,16 @@ describe('desktop build paths', () => {
+       .toContain(join('targets', 'mac-x64', 'runtime', 'primary-runtime'))
+     expect(developmentRuntimeDirectory({}, 'win32', 'arm64'))
+       .toContain(join('targets', 'win-x64', 'runtime', 'primary-runtime'))
++    expect(developmentRuntimeDirectory({}, 'linux', 'x64'))
++      .toContain(join('targets', 'linux-x64', 'runtime', 'primary-runtime'))
+   })
+ 
+   it('maps every target to the platform and architecture of the payload it prepares', () => {
+     expect(desktopTargetPlatform('mac-arm64')).toEqual({ platform: 'darwin', arch: 'arm64' })
+     expect(desktopTargetPlatform('mac-x64')).toEqual({ platform: 'darwin', arch: 'x64' })
+     expect(desktopTargetPlatform('win-x64')).toEqual({ platform: 'win32', arch: 'x64' })
+-    expect(() => desktopTargetPlatform('linux-x64' as 'mac-x64')).toThrow(/unsupported target/u)
++    expect(desktopTargetPlatform('linux-x64')).toEqual({ platform: 'linux', arch: 'x64' })
++    expect(() => desktopTargetPlatform('linux-arm64' as 'mac-x64')).toThrow(/unsupported target/u)
+   })
+ 
+   it('resolves environment overrides and rejects unsupported targets', () => {
+@@ -64,7 +71,10 @@ describe('desktop build paths', () => {
+       DSH_DESKTOP_TARGET_ARCH: 'x64',
+     }, 'darwin', 'arm64')).toBe('mac-x64')
+     expect(resolveDesktopBuildTarget({}, 'win32', 'x64')).toBe('win-x64')
+-    expect(() => resolveDesktopBuildTarget({}, 'linux', 'x64')).toThrow(/unsupported target/u)
+-    expect(() => desktopTargetBuildPaths('linux-x64' as 'mac-x64')).toThrow(/unsupported target/u)
++    expect(resolveDesktopBuildTarget({}, 'linux', 'x64')).toBe('linux-x64')
++    expect(resolveDesktopBuildTarget({ DSH_DESKTOP_TARGET_PLATFORM: 'linux', DSH_DESKTOP_TARGET_ARCH: 'x64' }, 'darwin', 'arm64'))
++      .toBe('linux-x64')
++    expect(() => resolveDesktopBuildTarget({}, 'linux', 'arm64')).toThrow(/unsupported target/u)
++    expect(() => desktopTargetBuildPaths('linux-arm64' as 'mac-x64')).toThrow(/unsupported target/u)
+   })
+ })
+diff --git a/apps/desktop/tests/development-project.spec.ts b/apps/desktop/tests/development-project.spec.ts
+index d08b82d..85e61c4 100644
+--- a/apps/desktop/tests/development-project.spec.ts
++++ b/apps/desktop/tests/development-project.spec.ts
+@@ -53,7 +53,10 @@ describe('desktop development project', () => {
+     expect(descriptor.sharedPackages).toContainEqual({ name: 'unhoisted', version: '1.2.3', path: 'node_modules/unhoisted' })
+   })
+ 
+-  it('manages development plugins without modifying the linked workspace packages', async () => {
++  it.each([
++    { target: 'win-x64', platform: 'win32' },
++    { target: 'linux-x64', platform: 'linux' },
++  ] as const)('manages development plugins for $target without modifying the linked workspace packages', async ({ target, platform }) => {
+     const root = temporaryRoot()
+     const cli = join(root, 'apps', 'cli')
+     const host = join(root, 'apps', 'desktop-host')
+@@ -77,7 +80,7 @@ describe('desktop development project', () => {
+       hostDir: host,
+       dependencyDir: dependencies,
+       release: release(),
+-      target: 'win-x64',
++      target,
+     })
+     expect(realpathSync(join(project, 'node_modules', '@deepseek-ai', 'dsh'))).toBe(realpathSync(cli))
+     expect(realpathSync(join(project, 'node_modules', '@deepseek-ai', 'dsh-desktop-host'))).toBe(realpathSync(host))
+@@ -91,7 +94,7 @@ describe('desktop development project', () => {
+     expect(manifest.dependencies['@deepseek-ai/dsh']).toBe('1.2.3')
+     expect(manifest.dependencies['@deepseek-ai/dsh-desktop-host']).toBe('1.2.3')
+     const descriptor = JSON.parse(readFileSync(join(project, 'desktop-runtime.json'), 'utf8')) as { platform: string; arch: string }
+-    expect(descriptor).toMatchObject({ platform: 'win32', arch: 'x64' })
++    expect(descriptor).toMatchObject({ platform, arch: 'x64' })
+     const manager = new DesktopProjectManager(resolveDesktopPaths(join(root, 'home')), {
+       dsh: project,
+     })
+diff --git a/apps/desktop/tests/fixtures/pnpm-smoke.mjs b/apps/desktop/tests/fixtures/pnpm-smoke.mjs
+index 5d16769..878ccc5 100644
+--- a/apps/desktop/tests/fixtures/pnpm-smoke.mjs
++++ b/apps/desktop/tests/fixtures/pnpm-smoke.mjs
+@@ -1,8 +1,8 @@
+-/** Install and use a local dependency with the packaged pnpm and Electron Node launcher. */
++/** Install and use a local dependency with the packaged pnpm and selected Host Node launcher. */
+ 
+ import assert from 'node:assert/strict'
+ import { execFileSync } from 'node:child_process'
+-import { existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs'
++import { existsSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, writeFileSync } from 'node:fs'
+ import { rm } from 'node:fs/promises'
+ import { tmpdir } from 'node:os'
+ import { delimiter, join } from 'node:path'
+@@ -13,13 +13,18 @@ import { delimiter, join } from 'node:path'
+  * @returns {Promise<void>} Resolves after execution and removal of the private installation.
+  */
+ export async function checkPnpm(resourcesRuntime) {
+-  assert.ok(process.versions.electron, 'Run the package-manager smoke with Electron Node mode')
+   assert.equal(existsSync(join(resourcesRuntime, 'pnpm')), false, 'Desktop must ship only primary-runtime pnpm')
+   const primary = join(resourcesRuntime, 'primary-runtime')
++  if (process.platform === 'linux') {
++    assert.equal(process.versions.electron, undefined, 'Linux Host must use standalone Node')
++    assert.equal(realpathSync(process.execPath), realpathSync(join(primary, 'dependencies', 'node', 'bin', 'node')),
++      'Run the package-manager smoke with the bundled primary Node')
++  } else assert.ok(process.versions.electron, 'Run the package-manager smoke with Electron Node mode')
+   const pnpm = join(primary, 'dependencies', 'pnpm', 'bin', 'pnpm.mjs')
+   const versions = JSON.parse(readFileSync(join(resourcesRuntime, 'versions.json'), 'utf8'))
+   const manifest = JSON.parse(readFileSync(join(primary, 'runtime.json'), 'utf8'))
+   assert.equal(versions.pnpm, manifest.pnpm)
++  assert.equal(process.versions.node, versions.node)
+   const scratch = mkdtempSync(join(tmpdir(), 'desktop-pnpm-smoke-'))
+   try {
+     mkdirSync(join(scratch, 'dependency'))
+@@ -36,7 +41,7 @@ export async function checkPnpm(resourcesRuntime) {
+ const assert = require('node:assert/strict')
+ assert.equal(require('desktop-pnpm-smoke-dependency').answer, 42)
+ assert.equal(process.execPath, ${JSON.stringify(process.execPath)})
+-assert.ok(process.versions.electron)
++assert.equal(process.versions.electron, ${JSON.stringify(process.versions.electron)})
+ assert.ok(process.execArgv.includes('--expose-internals'))
+ assert.equal(typeof require('internal/modules/esm/loader').getOrInitializeCascadedLoader, 'function')
+ console.log('desktop-node-script-ok')
+@@ -65,5 +70,5 @@ console.log('desktop-node-script-ok')
+ if (import.meta.main) {
+   assert.ok(process.argv[2], 'Pass the packaged runtime directory')
+   await checkPnpm(process.argv[2])
+-  console.log('desktop pnpm: offline installation and Electron Node package script passed')
++  console.log('desktop pnpm: offline installation and bundled Host Node package script passed')
+ }
+diff --git a/apps/desktop/tests/fixtures/runtime-payload-smoke.mjs b/apps/desktop/tests/fixtures/runtime-payload-smoke.mjs
+index 3cda38c..54361a9 100644
+--- a/apps/desktop/tests/fixtures/runtime-payload-smoke.mjs
++++ b/apps/desktop/tests/fixtures/runtime-payload-smoke.mjs
+@@ -1,4 +1,4 @@
+-/** Exercise filtered Desktop native and HTML dependencies under its Electron Node runtime. */
++/** Exercise filtered Desktop native and HTML dependencies under its selected Host Node runtime. */
+ 
+ import assert from 'node:assert/strict'
+ import { execFileSync } from 'node:child_process'
+@@ -14,7 +14,7 @@ const runtime = process.argv[2]
+ assert.ok(runtime, 'Pass the filtered resources/dsh directory')
+ const root = resolve(runtime)
+ const descriptor = JSON.parse(readFileSync(join(root, 'desktop-runtime.json'), 'utf8'))
+-assert.equal(process.versions.node, descriptor.release.nodeVersion, 'Run with the Electron Node runtime version')
++assert.equal(process.versions.node, descriptor.release.nodeVersion, 'Run with the bundled Host Node runtime version')
+ assert.equal(process.platform, descriptor.platform)
+ assert.equal(process.arch, descriptor.arch)
+ const resourcesRuntime = process.argv[3] ?? join(dirname(root), 'runtime')
+diff --git a/apps/desktop/tests/linux-runtime.spec.ts b/apps/desktop/tests/linux-runtime.spec.ts
+new file mode 100644
+index 0000000..659599e
+--- /dev/null
++++ b/apps/desktop/tests/linux-runtime.spec.ts
+@@ -0,0 +1,62 @@
++import { chmodSync, mkdirSync, mkdtempSync, rmSync, symlinkSync, writeFileSync } from 'node:fs'
++import { tmpdir } from 'node:os'
++import { dirname, join } from 'node:path'
++import { afterEach, expect, it } from 'vitest'
++import { LINUX_SYSTEM_PACKAGE, verifyLinuxSystemRuntime } from '../scripts/linux-runtime.mjs'
++
++const roots: string[] = []
++afterEach(() => { for (const root of roots.splice(0)) rmSync(root, { recursive: true, force: true }) })
++
++function fixture() {
++  const root = mkdtempSync(join(tmpdir(), 'linux-runtime-test-'))
++  roots.push(root)
++  const directory = join(root, 'node_modules', LINUX_SYSTEM_PACKAGE)
++  mkdirSync(directory, { recursive: true })
++  writeFileSync(join(directory, 'package.json'), JSON.stringify({ name: LINUX_SYSTEM_PACKAGE, os: ['linux'], cpu: ['x64'] }))
++  const binaries = [
++    { tool: 'landlock-run', kind: 'static-musl', path: 'bin/landlock-run' },
++    { tool: 'flock', kind: 'node-api', path: 'bin/glibc/system.node', libc: 'glibc', napi: 8 },
++    { tool: 'flock', kind: 'node-api', path: 'bin/musl/system.node', libc: 'musl', napi: 8 },
++  ]
++  writeFileSync(join(directory, 'prebuilds.json'), JSON.stringify({ platform: 'linux-x64', binaries }))
++  for (const binary of binaries) {
++    const body = Buffer.alloc(64)
++    body.writeUInt32LE(0x464c457f)
++    body[4] = 2
++    body[5] = 1
++    body.writeUInt16LE(binary.kind === 'static-musl' ? 2 : 3, 16)
++    body.writeUInt16LE(62, 18)
++    const file = join(directory, binary.path)
++    mkdirSync(dirname(file), { recursive: true })
++    writeFileSync(file, Buffer.concat([body, Buffer.from('napi_register_module_v1\0node_api_module_get_api_version_v1\0')]), { mode: 0o755 })
++  }
++  return { root, directory }
++}
++
++it('requires all declared Linux ELF binaries in a materialized package', () => {
++  const f = fixture()
++  expect(() => { verifyLinuxSystemRuntime(f.root) }).not.toThrow()
++  rmSync(join(f.directory, 'bin/landlock-run'))
++  expect(() => { verifyLinuxSystemRuntime(f.root) }).toThrow('missing bin/landlock-run')
++})
++
++it.skipIf(process.platform === 'win32')('rejects a non-executable Landlock launcher', () => {
++  const f = fixture()
++  chmodSync(join(f.directory, 'bin/landlock-run'), 0o644)
++  expect(() => { verifyLinuxSystemRuntime(f.root) }).toThrow('not executable')
++})
++
++it('rejects a development symlink in place of the physical platform package', () => {
++  const f = fixture()
++  const runtime = join(f.root, 'linked')
++  const link = join(runtime, 'node_modules', LINUX_SYSTEM_PACKAGE)
++  mkdirSync(dirname(link), { recursive: true })
++  symlinkSync(f.directory, link, process.platform === 'win32' ? 'junction' : 'dir')
++  expect(() => { verifyLinuxSystemRuntime(runtime) }).toThrow('physical directory')
++})
++
++it('rejects wrong-architecture addons before application packaging', () => {
++  const f = fixture()
++  writeFileSync(join(f.directory, 'bin/glibc/system.node'), 'not an ELF file')
++  expect(() => { verifyLinuxSystemRuntime(f.root) }).toThrow('ELF64')
++})
+diff --git a/apps/desktop/tests/login-shell-environment.spec.ts b/apps/desktop/tests/login-shell-environment.spec.ts
+index cc0bccf..bb807b9 100644
+--- a/apps/desktop/tests/login-shell-environment.spec.ts
++++ b/apps/desktop/tests/login-shell-environment.spec.ts
+@@ -1,17 +1,17 @@
+-import { chmodSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
++import { chmodSync, existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+ import { homedir, tmpdir } from 'node:os'
+ import { join } from 'node:path'
+ import { afterEach, beforeEach, describe, expect, it, onTestFinished, vi } from 'vitest'
+ import {
+   loginShellCandidates, mergeLoginShellEnvironment, parseLoginShellOutput, readDesktopLoginShellEnvironment,
+-  resolveDesktopLoginShellConfig,
++  resolveDesktopLoginShellConfig, type DesktopLoginShellConfig,
+ } from '../src/login-shell-environment.ts'
+ 
+ const account = vi.hoisted(() => ({ userInfo: vi.fn() }))
+ vi.mock('node:os', async importOriginal => ({ ...await importOriginal<typeof import('node:os')>(), userInfo: account.userInfo }))
+ 
+ const DELIMITER = '_DSH_SHELL_ENV_DELIMITER_'
+-const config = { timeoutMs: 5_000 }
++const config: DesktopLoginShellConfig = { mode: 'login-shell', timeoutMs: 5_000 }
+ let directory: string
+ 
+ beforeEach(() => { directory = mkdtempSync(join(tmpdir(), 'dsh-login-shell-')) })
+@@ -39,8 +39,19 @@ function shell(name: string, body: string): string {
+ 
+ describe('resolveDesktopLoginShellConfig', () => {
+   it('defaults to ten seconds and accepts an override', () => {
+-    expect(resolveDesktopLoginShellConfig({})).toEqual({ timeoutMs: 10_000 })
+-    expect(resolveDesktopLoginShellConfig({ DSH_DESKTOP_LOGIN_SHELL_TIMEOUT_MS: '2500' })).toEqual({ timeoutMs: 2_500 })
++    expect(resolveDesktopLoginShellConfig({})).toEqual({ mode: 'login-shell', timeoutMs: 10_000 })
++    expect(resolveDesktopLoginShellConfig({ DSH_DESKTOP_LOGIN_SHELL_TIMEOUT_MS: '2500' }))
++      .toEqual({ mode: 'login-shell', timeoutMs: 2_500 })
++  })
++
++  it.each(['inherit', 'login-shell'] as const)('accepts the explicit %s environment mode', (mode) => {
++    expect(resolveDesktopLoginShellConfig({ DSH_DESKTOP_HOST_ENVIRONMENT_MODE: mode }))
++      .toEqual({ mode, timeoutMs: 10_000 })
++  })
++
++  it.each(['', 'shell', 'INHERIT', 'inherit ', ' login-shell'])('rejects environment mode %j', (mode) => {
++    expect(() => resolveDesktopLoginShellConfig({ DSH_DESKTOP_HOST_ENVIRONMENT_MODE: mode }))
++      .toThrow('DSH_DESKTOP_HOST_ENVIRONMENT_MODE must be inherit or login-shell')
+   })
+ 
+   it.each(['999', '1.5', 'soon', '2147483648'])('rejects %s', (value) => {
+@@ -92,6 +103,26 @@ describe('mergeLoginShellEnvironment', () => {
+ })
+ 
+ describe('readDesktopLoginShellEnvironment', () => {
++  it.each(['linux', 'darwin', 'win32'] as const)('preserves the launcher environment in inherit mode on %s without running a shell', async (platform) => {
++    const marker = join(directory, 'shell-started')
++    const unused = shell('unused', `printf started > '${marker}'`)
++    const base = {
++      PATH: '/controlled/bin', HOME: '/home/user', TMPDIR: '/controlled/tmp',
++      XDG_CACHE_HOME: '/controlled/cache', XDG_CONFIG_HOME: '/controlled/config', XDG_STATE_HOME: '/controlled/state',
++    }
++    const result = await readDesktopLoginShellEnvironment(base,
++      resolveDesktopLoginShellConfig({ DSH_DESKTOP_HOST_ENVIRONMENT_MODE: 'inherit' }), { platform, shells: [unused] })
++    expect(result.environment).toBe(base)
++    expect(result.failures).toEqual([])
++    expect(existsSync(marker)).toBe(false)
++  })
++
++  it('does not discover account shells in inherit mode', async () => {
++    const lookups = account.userInfo.mock.calls.length
++    await readDesktopLoginShellEnvironment({}, { ...config, mode: 'inherit' }, { platform: 'linux' })
++    expect(account.userInfo).toHaveBeenCalledTimes(lookups)
++  })
++
+   it('returns the inherited environment on Windows without running a shell', async () => {
+     const base = { Path: 'C:\\Windows' }
+     await expect(readDesktopLoginShellEnvironment(base, config, { platform: 'win32', shells: [shell('unused', 'exit 1')] }))
+@@ -161,7 +192,7 @@ describe.skipIf(process.platform === 'win32')('readDesktopLoginShellEnvironment
+     const pidFile = join(directory, 'child.pid')
+     const hanging = shell('hanging', `sleep 30 & echo $! > '${pidFile}'; wait`)
+     const base = { PATH: '/usr/bin:/bin' }
+-    const result = await readDesktopLoginShellEnvironment(base, { timeoutMs: 2_000 }, { platform: 'darwin', shells: [hanging] })
++    const result = await readDesktopLoginShellEnvironment(base, { ...config, timeoutMs: 2_000 }, { platform: 'darwin', shells: [hanging] })
+     expect(result).toEqual({ environment: base, failures: [{ shell: hanging, reason: 'timeout' }] })
+     const child = Number(readFileSync(pidFile, 'utf8'))
+     await vi.waitFor(() => { expect(exited(child)).toBe(true) })
+diff --git a/apps/desktop/tests/main-startup.spec.ts b/apps/desktop/tests/main-startup.spec.ts
+index d9a8f31..6285fac 100644
+--- a/apps/desktop/tests/main-startup.spec.ts
++++ b/apps/desktop/tests/main-startup.spec.ts
+@@ -49,6 +49,8 @@ const harness = await vi.hoisted(async () => {
+   let quitCompleted = deferred()
+   let policyBlocked = deferred()
+   let embeddedPolicy: unknown
++  let registerProtocolClient: boolean | undefined
++  let platformViewPlatform: 'darwin' | 'win32' | null | undefined
+   let closeWindowsOnQuit = false
+   let updateState: DesktopUpdateState = { phase: 'idle' }
+   let platformDisposeDeferred: ReturnType<typeof deferred> | undefined
+@@ -229,6 +231,10 @@ const harness = await vi.hoisted(async () => {
+     get policyBlocked() { return policyBlocked },
+     get embeddedPolicy() { return embeddedPolicy },
+     set embeddedPolicy(value: unknown) { embeddedPolicy = value },
++    get registerProtocolClient() { return registerProtocolClient },
++    set registerProtocolClient(value: boolean | undefined) { registerProtocolClient = value },
++    get platformViewPlatform() { return platformViewPlatform },
++    set platformViewPlatform(value: 'darwin' | 'win32' | null | undefined) { platformViewPlatform = value },
+     nextNavigation() { navigated = deferred(); return navigated.promise },
+     nextHostStart() { hostStarted = deferred(); return hostStarted.promise },
+     deferPlatformDispose() { platformDisposeDeferred = deferred(); return platformDisposeDeferred },
+@@ -259,6 +265,8 @@ const harness = await vi.hoisted(async () => {
+       navigated = deferred(); dialogShown = deferred(); quitCompleted = deferred()
+       policyBlocked = deferred()
+       embeddedPolicy = undefined
++      registerProtocolClient = undefined
++      platformViewPlatform = undefined
+       platformDisposeDeferred = undefined
+       platformCloseDeferred = undefined
+     },
+@@ -307,7 +315,8 @@ vi.mock('node:fs/promises', async (importOriginal) => {
+   const original = await importOriginal<typeof import('node:fs/promises')>()
+   return { ...original, readFile: vi.fn((path: Parameters<typeof original.readFile>[0], encoding?: 'utf8') => {
+     if (path === join('desktop-test-app', 'package.json')) {
+-      return Promise.resolve(JSON.stringify({ dshDesktopAppId: 'com.deepseek.dsh', dshMandatoryUpdatePolicy: harness.embeddedPolicy }))
++      return Promise.resolve(JSON.stringify({ dshDesktopAppId: 'com.deepseek.dsh', dshMandatoryUpdatePolicy: harness.embeddedPolicy,
++        dshDesktopRegisterProtocolClient: harness.registerProtocolClient }))
+     }
+     return encoding === undefined ? original.readFile(path) : original.readFile(path, encoding)
+   }) }
+@@ -352,6 +361,9 @@ vi.mock('../src/update-coordinator.ts', () => ({ DesktopUpdateCoordinator: class
+ vi.mock('../src/platform-view.ts', async importOriginal => ({
+   ...await importOriginal<typeof import('../src/platform-view.ts')>(),
+   DesktopPlatformView: class {
++    constructor(_preload: string, _getLocale: () => string, platform: 'darwin' | 'win32' | null) {
++      harness.platformViewPlatform = platform
++    }
+     notifyLocaleChanged() {}
+     setSession() {}
+     setBounds() {}
+@@ -443,11 +455,41 @@ afterEach(async () => {
+ })
+ 
+ describe('desktop main startup', () => {
+-  it.each([true, false])('selects the package manager before Host startup (packaged=%s)', async (packaged) => {
++  it.each([['win32', 'win32'], ['darwin', 'darwin'], ['linux', null]] as const)(
++    'uses the supported Platform identity on %s', async (platform, expected) => {
++      vi.stubGlobal('process', { ...process, platform })
++      await readyForUpdate()
++      expect(harness.platformViewPlatform).toBe(expected)
++    },
++  )
++
++  it.each([
++    [true, undefined, undefined, true],
++    [true, undefined, true, true],
++    [true, undefined, false, false],
++    [false, undefined, undefined, false],
++    [false, '1', undefined, true],
++    [false, '1', false, false],
++  ] as const)('respects protocol registration policy (packaged=%s, dev app=%s, setting=%s)', async (packaged, devApp, setting, expected) => {
++    harness.app.isPackaged = packaged
++    harness.registerProtocolClient = setting
++    vi.stubEnv('DSH_DESKTOP_DEV_APP', devApp)
++    await readyForUpdate()
++    expect(harness.app.setAsDefaultProtocolClient.mock.calls).toEqual(expected ? [['dsh']] : [])
++    expect(harness.protocolHandle).toHaveBeenCalledWith('dsh-app', expect.any(Function))
++  })
++
++  it.each([
++    ['win32', true], ['win32', false], ['darwin', true], ['darwin', false], ['linux', true], ['linux', false],
++  ] as const)('selects the Host runtime and package manager on %s (packaged=%s)', async (platform, packaged) => {
++    vi.stubGlobal('process', { ...process, platform })
+     harness.app.isPackaged = packaged
+     await readyForUpdate()
+     const host = harness.hosts[0]!
+-    expect(host.node).toBe(process.execPath)
++    expect(host.node).toBe(packaged && platform === 'linux'
++      ? join('desktop-test-resources', 'runtime', 'primary-runtime', 'dependencies', 'node', 'bin', 'node') : process.execPath)
++    expect(host.runtime).toBe(packaged
++      ? platform === 'linux' ? join('desktop-test-resources', 'dsh') : join('desktop-test-app', 'dsh') : 'test-runtime')
+     expect(host.primaryRuntime).toBe(packaged
+       ? join('desktop-test-resources', 'runtime', 'primary-runtime') : 'test-primary-runtime')
+     expect(host.packageManager).toMatchObject({
+@@ -1280,6 +1322,59 @@ describe('desktop main startup', () => {
+     expect(harness.trays[0]!.setContextMenu.mock.calls.length).toBe(relabels + 1)
+   })
+ 
++  it('quits on Linux window close after stopping the idle Host without a tray', async () => {
++    vi.stubGlobal('process', { ...process, platform: 'linux' })
++    harness.closeWindowsOnQuit = true
++    const host = await readyWorkspace()
++    const window = harness.windows[0]!
++    expect(harness.trays).toHaveLength(0)
++    window.close()
++    expect(window.isDestroyed()).toBe(false)
++    expect(window.hide).not.toHaveBeenCalled()
++    expect(harness.app.quit).toHaveBeenCalledOnce()
++    expect(harness.backgroundNotice.close).not.toHaveBeenCalled()
++    await host.stopping.promise
++    expect(host.inspectQuit).toHaveBeenCalledOnce()
++    expect(harness.dialog.showMessageBox).not.toHaveBeenCalled()
++    expect(window.hide).toHaveBeenCalledOnce()
++    expect(window.isDestroyed()).toBe(false)
++    host.exited.resolve()
++    await harness.quitCompleted.promise
++    expect(window.isDestroyed()).toBe(true)
++  })
++
++  it('keeps the Linux workspace open when closing is cancelled and stops the Host after approval', async () => {
++    vi.stubGlobal('process', { ...process, platform: 'linux' })
++    harness.closeWindowsOnQuit = true
++    const host = await readyWorkspace()
++    const window = harness.windows[0]!
++    host.inspectQuit.mockResolvedValue({ activeTasks: true, scheduledTasks: false })
++    const confirmation = Promise.withResolvers<Electron.MessageBoxReturnValue>()
++    harness.dialog.showMessageBox.mockReturnValueOnce(confirmation.promise)
++    window.close()
++    await vi.advanceTimersByTimeAsync(0)
++    expect(harness.dialog.showMessageBox).toHaveBeenCalledExactlyOnceWith(expect.objectContaining({
++      message: en.quitTitle, detail: en.quitActiveTasks, buttons: [en.quit, en.cancel], cancelId: 1,
++    }))
++    expect(window.hide).not.toHaveBeenCalled()
++    expect(window.isDestroyed()).toBe(false)
++    expect(host.stop).not.toHaveBeenCalled()
++    confirmation.resolve({ response: 1, checkboxChecked: false })
++    await vi.advanceTimersByTimeAsync(0)
++    expect(window.hide).not.toHaveBeenCalled()
++    expect(window.isDestroyed()).toBe(false)
++    expect(host.stop).not.toHaveBeenCalled()
++    harness.dialog.showMessageBox.mockResolvedValue({ response: 0, checkboxChecked: false })
++    window.close()
++    await host.stopping.promise
++    expect(host.inspectQuit).toHaveBeenCalledTimes(2)
++    expect(host.stop).toHaveBeenCalledOnce()
++    expect(window.hide).toHaveBeenCalledOnce()
++    host.exited.resolve()
++    await harness.quitCompleted.promise
++    expect(window.isDestroyed()).toBe(true)
++  })
++
+   it('keeps the workspace visible while acknowledgement is pending and ignores a destroyed window', async () => {
+     await readyWorkspace()
+     const window = harness.windows[0]!
+@@ -1293,7 +1388,8 @@ describe('desktop main startup', () => {
+     expect(window.hide).not.toHaveBeenCalled()
+   })
+ 
+-  it('focuses an existing shell dialog instead of replacing it with a close confirmation', async () => {
++  it.each(['win32', 'linux'] as const)('focuses an existing shell dialog instead of replacing it with a close confirmation on %s', async (platform) => {
++    vi.stubGlobal('process', { ...process, platform })
+     await readyWorkspace()
+     const window = harness.windows[0]!
+     harness.shellDialog.isOpen = true
+@@ -1301,6 +1397,8 @@ describe('desktop main startup', () => {
+     expect(harness.shellDialog.focus).toHaveBeenCalledOnce()
+     expect(harness.backgroundNotice.close).not.toHaveBeenCalled()
+     expect(window.hide).not.toHaveBeenCalled()
++    expect(harness.app.quit).not.toHaveBeenCalled()
++    expect(window.isDestroyed()).toBe(false)
+   })
+ 
+   it('leaves macOS fullscreen before hiding on close and reopens the hidden window on activate', async () => {
+diff --git a/apps/desktop/tests/package-linux.spec.ts b/apps/desktop/tests/package-linux.spec.ts
+new file mode 100644
+index 0000000..fda9d5c
+--- /dev/null
++++ b/apps/desktop/tests/package-linux.spec.ts
+@@ -0,0 +1,57 @@
++import { describe, expect, it } from 'vitest'
++import { createElectronBuilderConfig } from '../scripts/electron-builder-config.mjs'
++import { linuxLocalPackageEnvironment, parseLinuxPackageInvocation } from '../scripts/package-linux.ts'
++
++describe('local Linux packaging', () => {
++  it('defaults to an unpacked directory and accepts only explicit local artifact formats', () => {
++    expect(parseLinuxPackageInvocation([], 'linux', 'x64')).toEqual({ format: 'dir', skipBuild: false })
++    for (const format of ['dir', 'AppImage', 'rpm']) {
++      expect(parseLinuxPackageInvocation(['--format', format, '--skip-build'], 'linux', 'x64'))
++        .toEqual({ format, skipBuild: true })
++    }
++    expect(() => parseLinuxPackageInvocation(['--format', 'deb'], 'linux', 'x64')).toThrow('format must be')
++    expect(() => parseLinuxPackageInvocation(['--publish', 'always'], 'linux', 'x64')).toThrow()
++    expect(() => parseLinuxPackageInvocation(['--signed'], 'linux', 'x64')).toThrow()
++  })
++
++  it.each([['darwin', 'x64'], ['win32', 'x64'], ['linux', 'arm64']] as const)('rejects the %s/%s build host', (platform, arch) => {
++    expect(() => parseLinuxPackageInvocation([], platform, arch)).toThrow('requires a Linux x64 build host')
++  })
++
++  it('retains contained build paths while stripping official policy, signing and upload settings', () => {
++    const selected = linuxLocalPackageEnvironment({
++      TMPDIR: '/controlled/tmp', XDG_CACHE_HOME: '/controlled/cache', DSH_HOME: '/controlled/home',
++      DSH_DESKTOP_HOST_ENVIRONMENT_MODE: 'inherit', DSH_DESKTOP_APP_ID: 'com.deepseek.harness',
++      DSH_DESKTOP_MANDATORY_UPDATE_CONFIG: 'official policy', DSH_DESKTOP_AUTO_UPDATE_ENV: 'production',
++      DSH_DESKTOP_UPDATE_CHANNEL: 'latest', DSH_DESKTOP_MACOS_TEAM_ID: 'team',
++      DSH_DESKTOP_WINDOWS_TOKEN_PIN: 'fixture', DOWNLOAD_PROD_COS_SECRET_KEY: 'fixture',
++      APPLE_ID: 'fixture', CSC_LINK: 'fixture', DSH_PACKAGING_PRESET: 'production',
++    })
++    expect(selected).toMatchObject({ TMPDIR: '/controlled/tmp', XDG_CACHE_HOME: '/controlled/cache', DSH_HOME: '/controlled/home',
++      DSH_DESKTOP_HOST_ENVIRONMENT_MODE: 'inherit', DSH_DESKTOP_APP_ID: 'local.deepseek.harness', DSH_DESKTOP_UNSIGNED: '1',
++      DSH_DESKTOP_TARGET_PLATFORM: 'linux', DSH_DESKTOP_TARGET_ARCH: 'x64' })
++    for (const name of ['DSH_DESKTOP_MANDATORY_UPDATE_CONFIG', 'DSH_DESKTOP_AUTO_UPDATE_ENV', 'DSH_DESKTOP_UPDATE_CHANNEL',
++      'DSH_DESKTOP_WINDOWS_TOKEN_PIN', 'DSH_DESKTOP_MACOS_TEAM_ID', 'DOWNLOAD_PROD_COS_SECRET_KEY', 'APPLE_ID', 'CSC_LINK', 'DSH_PACKAGING_PRESET']) {
++      expect(selected).not.toHaveProperty(name)
++    }
++  })
++
++  it('builds local application metadata with neither official feeds nor OS protocol registration', () => {
++    const config = createElectronBuilderConfig(linuxLocalPackageEnvironment(), 'linux', 'x64')
++    expect(config.publish).toBeNull()
++    expect(config.protocols).toEqual([])
++    expect(config.extraMetadata.dshDesktopRegisterProtocolClient).toBe(false)
++    expect(config.extraMetadata).not.toHaveProperty('dshMandatoryUpdatePolicy')
++    expect(config.linux.executableName).toBe('deepseek-harness')
++    expect(config.rpm?.packageName).toBe('deepseek-harness')
++    expect(config.artifactName).toContain('-unsigned.')
++    expect(config.files.filter(entry => typeof entry !== 'string')).toEqual([])
++    expect(config.extraResources).toContainEqual(expect.objectContaining({ to: 'dsh' }))
++    expect(config.extraResources).toContainEqual(expect.objectContaining({ to: 'dsh/node_modules', filter: ['**/*'] }))
++  })
++
++  it('rejects signed Linux packaging even when official release variables are present', () => {
++    expect(() => createElectronBuilderConfig({ ...linuxLocalPackageEnvironment(), DSH_DESKTOP_UNSIGNED: '0' }, 'linux', 'x64'))
++      .toThrow('unsigned local x64 packages only')
++  })
++})
+diff --git a/apps/desktop/tests/packaged-runtime-verification.spec.ts b/apps/desktop/tests/packaged-runtime-verification.spec.ts
+index 9e697e9..7414d44 100644
+--- a/apps/desktop/tests/packaged-runtime-verification.spec.ts
++++ b/apps/desktop/tests/packaged-runtime-verification.spec.ts
+@@ -1,8 +1,11 @@
+ import { describe, expect, it, vi } from 'vitest'
+ 
+ const { verifyDesktopRuntime } = vi.hoisted(() => ({
+-  verifyDesktopRuntime: vi.fn<(root: string, expected: string) => Promise<void>>(async () => undefined),
++  verifyDesktopRuntime: vi.fn<(
++    root: string, expected: string, target: { platform: string; arch: string },
++  ) => Promise<void>>(async () => undefined),
+ }))
++vi.mock('../scripts/linux-runtime.mjs', () => ({ verifyLinuxSystemRuntime: vi.fn() }))
+ // The hook imports the built tree, which a clean checkout has not produced; this is the path it resolves.
+ vi.mock('/apps/desktop/lib/types/runtime-tree.js', () => ({ verifyDesktopRuntime }))
+ vi.mock('../scripts/windows-asar-unpack.mjs', async importOriginal => ({
+@@ -36,6 +39,31 @@ async function requiredRuntimeVersion(preparedRuntime?: string, preparedRuntimeV
+ }
+ 
+ describe('packaged runtime verification', () => {
++  it('verifies the Linux physical runtime before copying and after assembly', async () => {
++    const { createElectronBuilderConfig } = await import('../scripts/electron-builder-config.mjs')
++    const config = createElectronBuilderConfig({ DSH_DESKTOP_APP_ID: 'local.deepseek.harness',
++      DSH_DESKTOP_TARGET_PLATFORM: 'linux', DSH_DESKTOP_TARGET_ARCH: 'x64', DSH_DESKTOP_UNSIGNED: '1' },
++    'linux', 'x64', '/prepared/dsh', '0.2.1-rc.2')
++    verifyDesktopRuntime.mockClear()
++    await config.beforePack({ ...CONTEXT, packager: { config: { asarUnpack: [] } } } as never)
++    expect(verifyDesktopRuntime.mock.calls).toEqual([
++      ['/prepared/dsh', '0.2.1-rc.2', { platform: 'linux', arch: 'x64' }],
++    ])
++    await config.afterPack(CONTEXT as never)
++    expect(verifyDesktopRuntime.mock.calls.slice(1)).toEqual([
++      ['out/resources/dsh', '0.2.1-rc.2', { platform: 'linux', arch: 'x64' }],
++      ['/prepared/dsh', '0.2.1-rc.2', { platform: 'linux', arch: 'x64' }],
++    ])
++  })
++
++  it('rejects a Linux package when its physical runtime inventory fails verification', async () => {
++    const { createElectronBuilderConfig } = await import('../scripts/electron-builder-config.mjs')
++    const config = createElectronBuilderConfig({ DSH_DESKTOP_APP_ID: 'local.deepseek.harness',
++      DSH_DESKTOP_TARGET_PLATFORM: 'linux', DSH_DESKTOP_TARGET_ARCH: 'x64', DSH_DESKTOP_UNSIGNED: '1' }, 'linux', 'x64')
++    verifyDesktopRuntime.mockRejectedValueOnce(new Error('runtime inventory mismatch'))
++    await expect(config.afterPack(CONTEXT as never)).rejects.toThrow('runtime inventory mismatch')
++  })
++
+   it('requires the product version when the target tree supplies the runtime', async () => {
+     const productVersion = (JSON.parse(
+       await import('node:fs/promises').then(async fs => fs.readFile(new URL('../package.json', import.meta.url), 'utf8')),
+diff --git a/apps/desktop/tests/platform-view.spec.ts b/apps/desktop/tests/platform-view.spec.ts
+index f62987d..ce0db3d 100644
+--- a/apps/desktop/tests/platform-view.spec.ts
++++ b/apps/desktop/tests/platform-view.spec.ts
+@@ -45,12 +45,12 @@ afterEach(() => {
+   state.views.length = 0; state.sessions.length = 0; state.loadFailure = undefined; state.loadBarrier = undefined
+   vi.clearAllMocks(); vi.unstubAllEnvs()
+ })
+-function setup() {
++function setup(platform: 'darwin' | 'win32' | null = 'darwin') {
+   const removeChildView = vi.fn()
+   const owner = Object.assign(new EventEmitter(), {
+     webContents: new EventEmitter(), contentView: { addChildView: vi.fn(), removeChildView }, isDestroyed: () => false,
+   })
+-  const manager = new DesktopPlatformView('/bundled/preload.cjs', () => 'en_US', 'darwin')
++  const manager = new DesktopPlatformView('/bundled/preload.cjs', () => 'en_US', platform)
+   manager.setSession({ origin: 'https://platform.deepseek.com', userId: 'fixture-user' as AccountUserId, token: 'fixture-secret' })
+   return { manager, owner, removeChildView }
+ }
+@@ -149,6 +149,14 @@ it('injects the deployment and client identity headers only at the Platform orig
+   manager.close()
+ })
+ 
++it('uses web identity when the shell has no supported Desktop platform identity', async () => {
++  const { manager, owner } = setup(null)
++  await manager.open(owner, 'usage', bounds)
++  expect(interceptHeaders(1, 'https://platform.deepseek.com/usage', { 'x-client-platform': 'desktop-mac' }))
++    .toMatchObject({ 'x-client-platform': 'web', 'x-client-version': '1.2.3' })
++  manager.close()
++})
++
+ it('samples the language and UTC offset on every Platform request', async () => {
+   let locale: 'en_US' | 'zh_CN' = 'en_US'
+   const owner = Object.assign(new EventEmitter(), {
+diff --git a/apps/desktop/tests/protocol-registration.spec.ts b/apps/desktop/tests/protocol-registration.spec.ts
+new file mode 100644
+index 0000000..4556a17
+--- /dev/null
++++ b/apps/desktop/tests/protocol-registration.spec.ts
+@@ -0,0 +1,16 @@
++import { expect, it } from 'vitest'
++import { desktopProtocolRegistrationEnabled } from '../src/protocol-registration.ts'
++
++it('retains protocol registration unless the manifest explicitly disables it', () => {
++  expect(desktopProtocolRegistrationEnabled({})).toBe(true)
++  expect(desktopProtocolRegistrationEnabled({ dshDesktopRegisterProtocolClient: true })).toBe(true)
++  expect(desktopProtocolRegistrationEnabled({ dshDesktopRegisterProtocolClient: false })).toBe(false)
++})
++
++it.each([undefined, null, 'false', 0, 1, {}, []])('rejects a nonboolean protocol registration field (%j)', value => {
++  expect(() => desktopProtocolRegistrationEnabled({ dshDesktopRegisterProtocolClient: value })).toThrow('must be a boolean')
++})
++
++it.each([undefined, null, 'false', []])('rejects an invalid application manifest (%j)', manifest => {
++  expect(() => desktopProtocolRegistrationEnabled(manifest)).toThrow('invalid application manifest')
++})
+diff --git a/apps/desktop/tests/runtime-preparation.spec.ts b/apps/desktop/tests/runtime-preparation.spec.ts
+index d16dd59..28fbf61 100644
+--- a/apps/desktop/tests/runtime-preparation.spec.ts
++++ b/apps/desktop/tests/runtime-preparation.spec.ts
+@@ -3,16 +3,19 @@
+ import { existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs'
+ import { rm } from 'node:fs/promises'
+ import { tmpdir } from 'node:os'
+-import { join } from 'node:path'
++import { dirname, join } from 'node:path'
+ import { afterEach, beforeEach, expect, it, vi } from 'vitest'
++import type { DesktopBuildTarget } from '../scripts/desktop-build-paths.mjs'
+ 
+ const state = vi.hoisted(() => ({
+   root: '',
+-  target: 'mac-arm64' as 'mac-arm64' | 'mac-x64' | 'win-x64',
++  target: 'mac-arm64' as DesktopBuildTarget,
+   pnpm: '11.7.0' as string | undefined,
+   failure: undefined as 'electron' | 'primary' | 'cli' | undefined,
+   preparePrimary: vi.fn(),
+   commandLink: vi.fn(),
++  downloadElectron: vi.fn(async () => 'electron.zip'),
++  executions: [] as string[],
+ }))
+ vi.mock('../scripts/desktop-build-paths.mjs', async importOriginal => ({
+   ...await importOriginal<typeof import('../scripts/desktop-build-paths.mjs')>(),
+@@ -21,13 +24,20 @@ vi.mock('../scripts/desktop-build-paths.mjs', async importOriginal => ({
+     runtime: join(state.root, 'runtime'), electron: join(state.root, 'electron'), downloads: join(state.root, 'downloads'),
+   }),
+ }))
+-vi.mock('@electron/get', () => ({ downloadArtifact: async () => 'electron.zip' }))
++vi.mock('@electron/get', () => ({ downloadArtifact: state.downloadElectron }))
+ vi.mock('extract-zip', () => ({ default: async () => {
+   if (state.failure === 'electron') throw new Error('Electron extraction failed')
++  const executable = join(state.root, 'electron', state.target === 'win-x64' ? 'electron.exe'
++    : state.target === 'linux-x64' ? 'electron' : 'Electron.app/Contents/MacOS/Electron')
++  mkdirSync(dirname(executable), { recursive: true })
++  writeFileSync(executable, 'Electron fixture')
+ } }))
+ vi.mock('node:child_process', async importOriginal => ({
+   ...await importOriginal<typeof import('node:child_process')>(),
+-  execFileSync: (file: string) => file === '/usr/libexec/PlistBuddy' ? '12.0\n' : '24.18.1\n',
++  execFileSync: (file: string) => {
++    state.executions.push(file)
++    return file === '/usr/libexec/PlistBuddy' ? '12.0\n' : '24.18.1\n'
++  },
+ }))
+ vi.mock('../scripts/prepare-command-link.ts', () => ({ prepareCommandLink: state.commandLink }))
+ // The compiled command manager is a build input; all source resource copies use real files.
+@@ -52,6 +62,7 @@ beforeEach(() => {
+   state.target = 'mac-arm64'
+   state.pnpm = '11.7.0'
+   state.failure = undefined
++  state.executions = []
+   process.argv = [process.execPath, 'prepare-runtime.ts']
+   vi.stubEnv('DSH_DESKTOP_PACKAGING_RUN_DIR', undefined)
+   state.preparePrimary.mockImplementation(async () => {
+@@ -61,7 +72,7 @@ beforeEach(() => {
+     mkdirSync(pnpm, { recursive: true })
+     writeFileSync(join(pnpm, 'pnpm.mjs'), '')
+     writeFileSync(join(root, 'runtime.json'), JSON.stringify({
+-      desktopVersion: '1.0.0', platform: state.target === 'win-x64' ? 'win32' : 'darwin',
++      desktopVersion: '1.0.0', platform: state.target === 'win-x64' ? 'win32' : state.target === 'linux-x64' ? 'linux' : 'darwin',
+       arch: state.target === 'mac-arm64' ? 'arm64' : 'x64',
+       python: '3.12.14', node: '24.17.0', pnpm: state.pnpm, pythonPackages: { numpy: '2.3.5' },
+     }))
+@@ -74,7 +85,7 @@ afterEach(async () => {
+   await rm(state.root, { recursive: true, force: true, maxRetries: 20, retryDelay: 50 })
+ })
+ 
+-it.each(['mac-arm64', 'mac-x64', 'win-x64'] as const)('prepares %s with one pnpm distribution and its CLI resources', async (target) => {
++it.each(['mac-arm64', 'mac-x64', 'win-x64', 'linux-x64'] as const)('prepares %s with one pnpm distribution and its CLI resources', async (target) => {
+   state.target = target
+   const windows = target === 'win-x64'
+   if (windows) process.argv.push('--defer-primary-runtime-smoke')
+@@ -88,11 +99,12 @@ it.each(['mac-arm64', 'mac-x64', 'win-x64'] as const)('prepares %s with one pnpm
+   expect(readFileSync(join(runtime, 'cli', 'command-manager.js'), 'utf8')).toBe('command manager fixture')
+   expect(existsSync(join(runtime, 'cli', 'command-path.ps1'))).toBe(true)
+   expect(JSON.parse(readFileSync(join(runtime, 'versions.json'), 'utf8'))).toEqual({
+-    schemaVersion: 1, node: '24.18.1', pnpm: '11.7.0',
++    schemaVersion: 1, node: target === 'linux-x64' ? '24.17.0' : '24.18.1', pnpm: '11.7.0',
+   })
+   expect(state.preparePrimary).toHaveBeenCalledWith({ deferSmoke: windows })
+-  if (windows) expect(state.commandLink).not.toHaveBeenCalled()
++  if (windows || target === 'linux-x64') expect(state.commandLink).not.toHaveBeenCalled()
+   else expect(state.commandLink).toHaveBeenCalledWith(join(runtime, 'cli'), target === 'mac-arm64' ? 'arm64' : 'x64', '12.0')
++  if (target === 'linux-x64') expect(state.executions).toEqual([])
+ })
+ 
+ it.each([
+diff --git a/apps/desktop/tests/runtime-store-directory.spec.ts b/apps/desktop/tests/runtime-store-directory.spec.ts
+new file mode 100644
+index 0000000..ebf85f9
+--- /dev/null
++++ b/apps/desktop/tests/runtime-store-directory.spec.ts
+@@ -0,0 +1,17 @@
++import { resolve } from 'node:path'
++import { expect, it } from 'vitest'
++import { resolveDesktopRuntimeStoreDirectory } from '../scripts/runtime-store-directory.mjs'
++
++it('retains the temporary production store when reuse is not configured', () => {
++  expect(resolveDesktopRuntimeStoreDirectory({})).toBeUndefined()
++})
++
++it('normalizes an explicit absolute store directory', () => {
++  const directory = resolve('contained', 'store', '..', 'pnpm-store')
++  expect(resolveDesktopRuntimeStoreDirectory({ DSH_DESKTOP_RUNTIME_STORE_DIR: directory })).toBe(directory)
++})
++
++it.each(['', 'relative/store', '~/pnpm-store', '/store\0invalid'])('rejects invalid store configuration %j', (directory) => {
++  expect(() => resolveDesktopRuntimeStoreDirectory({ DSH_DESKTOP_RUNTIME_STORE_DIR: directory }))
++    .toThrow('must be a nonempty absolute directory')
++})

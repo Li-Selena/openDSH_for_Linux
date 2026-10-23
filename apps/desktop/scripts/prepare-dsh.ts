@@ -35,6 +35,7 @@ import { desktopTargetPlatform, resolveDesktopBuildTarget, resolveDesktopTargetB
 import { desktopRuntimeFileExclusion } from './runtime-file-policy.ts'
 import { selectOfficeEngine } from '../../../scripts/libreoffice-packages.mjs'
 import { verifyLinuxSystemRuntime } from './linux-runtime.mjs'
+import { normalizeLinuxBundlePaths } from './linux-bundle-paths.mjs'
 import { resolveDesktopRuntimeStoreDirectory } from './runtime-store-directory.mjs'
 
 const APP_ROOT = resolve(import.meta.dirname, '..')
@@ -152,7 +153,10 @@ async function main(): Promise<void> {
         filter: source => desktopRuntimeFileExclusion(relative(modules, source), target, officeEngine) === undefined,
       })
     })
-    if (target.platform === 'linux') verifyLinuxSystemRuntime(DSH_OUTPUT_ROOT)
+    if (target.platform === 'linux') {
+      verifyLinuxSystemRuntime(DSH_OUTPUT_ROOT)
+      normalizeLinuxBundlePaths(DSH_OUTPUT_ROOT, resolve(APP_ROOT, '..', '..'))
+    }
     writeFileSync(join(DSH_OUTPUT_ROOT, 'package.json'), `${JSON.stringify({
       name: '@deepseek-ai/dsh-desktop-runtime', private: true, version: release.version, type: 'module',
       dependencies: Object.fromEntries(packageSet.packages.map(entry => [entry.name, entry.version])),
